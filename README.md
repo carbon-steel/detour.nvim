@@ -21,17 +21,13 @@ What if we used a popup window instead?
 [Screencast from 2023-09-30 10-16-12.webm](https://github.com/carbon-steel/detour.nvim/assets/7697639/8ebef6a8-c125-497f-83a0-82546ae2ac28)
 
 ## Promote to a split
-You can "promote" your popup to be a split (vertical or horizontal) if you want.
+You can "promote" your popup to be a split (vertical or horizontal) or a tab.
 
-[Screencast from 2023-09-30 10-19-35.webm](https://github.com/carbon-steel/detour.nvim/assets/7697639/b7dac6ba-177e-494d-a79c-2a9c5c831db9)
-
-## Promote to tab
-You can "promote" your popup to be a tab as well.
-
-[Screencast from 2023-09-30 10-18-35.webm](https://github.com/carbon-steel/detour.nvim/assets/7697639/2af0f027-97f0-450a-9db9-33341b6026f2)
+[Screencast from 2023-09-30 13-20-04.webm](https://github.com/carbon-steel/detour.nvim/assets/7697639/7aa55e35-aacd-4346-b1dc-926f1f1b8588)
 
 # Installation
 ## Lazy.nvim
+
 ```lua
 { "carbon-steel/detour.nvim",
     config = function ()
