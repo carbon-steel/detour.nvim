@@ -1,7 +1,9 @@
 # detour.nvim
 > It's a dangerous business, Frodo, going out your door. You step onto the road, and if you don't keep your feet, there's no knowing where you might be swept off to.
 
-― J.R.R. Tolkien, The Lord of the Rings 
+<div dir="rtl">
+J.R.R. Tolkien, The Lord of the Rings 
+</div>
 
 # Never lose your spot!📍🗺️
 The programming process always includes interruptions where we stop writing code and go read some other code. This Neovim plugin helps us find our way back from these detours.
