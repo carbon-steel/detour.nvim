@@ -9,8 +9,10 @@ J.R.R. Tolkien, The Lord of the Rings
 The programming process always includes interruptions where we stop writing code and go read some other code. This Neovim plugin helps us find our way back from these detours.
 
 (Neo)Vim users often encapsulate detours in a split or a tab. However,
-* Splits "split" your screen's space (especially bad if you're only reading from one of the splits).
-* We're not always good about cleaning up splits/tabs (cluttering up your workspace).
+
+* 👎 Splits "split" your screen's space
+* 👎 Some people don't clean up their splits/tabs[^1]
+[^1]: no shame if you're one of them
 
 What if we used a popup window instead?
 
