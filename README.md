@@ -17,12 +17,15 @@ What if we used a popup window instead?
 -----------------
 ## Typical Use
 `detour.nvim` allows you to open a popup window containing your current buffer. You can treat that popup window as you would a new split or tab. That means you can switch to other files and locations. When you want to come back to where you started, just close the window.
+
 [Screencast from 2023-09-30 10-16-12.webm](https://github.com/carbon-steel/detour.nvim/assets/7697639/8ebef6a8-c125-497f-83a0-82546ae2ac28)
 
 ## Promote to a split
 You can "promote" your popup to be a split (vertical or horizontal) if you want.
+
 [Screencast from 2023-09-30 10-19-35.webm](https://github.com/carbon-steel/detour.nvim/assets/7697639/b7dac6ba-177e-494d-a79c-2a9c5c831db9)
 
 ## Promote to tab
 You can "promote" your popup to be a tab as well.
+
 [Screencast from 2023-09-30 10-18-35.webm](https://github.com/carbon-steel/detour.nvim/assets/7697639/2af0f027-97f0-450a-9db9-33341b6026f2)
