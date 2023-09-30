@@ -12,6 +12,8 @@ The programming process always includes interruptions where we stop writing code
 
 What if we used a popup window instead?
 
+-----------------_
+
 TODO: show a gif opening a popup and navigating around
 
 TODO: show a gif of promoting a popup to a split, vsplit, and a tab
