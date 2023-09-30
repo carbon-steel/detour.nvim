@@ -16,6 +16,6 @@ What if we used a popup window instead?
 
 -----------------
 
-TODO: show a gif opening a popup and navigating around
+[Basic usage](https://github.com/carbon-steel/detour.nvim/assets/7697639/ba6558f2-c245-4d9d-b839-0d54e21bf3e5)
 
 TODO: show a gif of promoting a popup to a split, vsplit, and a tab
