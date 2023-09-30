@@ -4,11 +4,11 @@
 ― J.R.R. Tolkien, The Lord of the Rings 
 
 # Never lose your spot!📍🗺️
-The programming process always includes interruptions where we stop writing code and go read some other code. These detours often come from `go-to-definition`/`declaration`/`class`/`references` but may also come from other reasons. These detours can branch into other detours and can make finding our way back to the start frustrating.
+The programming process always includes interruptions where we stop writing code and go read some other code. This Neovim plugin helps us find our way back from these detours.
 
-One common way to reduce the frustrations of detours is to encapsulate the detour in a split or a tab. However,
+(Neo)Vim users often encapsulate detours in a split or a tab. However,
 * splits keep you from using most of your screen
-* Most users are not good about cleaning up splits and tabs after they're done (accumulating clutter in your workspace)
+* We're not always good about cleaning up splits/tabs (cluttering up your workspace)
 
 What if we used a popup window instead?
 
