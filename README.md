@@ -14,7 +14,7 @@ The programming process always includes interruptions where we stop writing code
 
 What if we used a popup window instead?
 
------------------
+# How to use
 ## Typical Use
 `detour.nvim` allows you to open a popup window containing your current buffer. You can treat that popup window as you would a new split or tab. That means you can switch to other files and locations. When you want to come back to where you started, just close the window.
 
@@ -29,3 +29,18 @@ You can "promote" your popup to be a split (vertical or horizontal) if you want.
 You can "promote" your popup to be a tab as well.
 
 [Screencast from 2023-09-30 10-18-35.webm](https://github.com/carbon-steel/detour.nvim/assets/7697639/2af0f027-97f0-450a-9db9-33341b6026f2)
+
+# Installation
+## Lazy.nvim
+```lua
+{ "carbon-steel/detour.nvim",
+    config = function ()
+       local detour = require("detour")
+       -- The keymaps here are just an example. You should find keymaps that work better for you.
+       vim.keymap.set('n', '<c-w><enter>', detour.FloatWin)
+       vim.keymap.set('n', '<c-w>,', detour.PromoteToTab)
+       vim.keymap.set('n', '<c-w>.', detour.PromoteToSplit)
+       vim.keymap.set('n', '<c-w>/', detour.PromoteToVsplit)
+   end
+},
+```
