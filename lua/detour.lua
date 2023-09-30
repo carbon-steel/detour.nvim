@@ -52,12 +52,10 @@ local function float(bufnr)
 end
 
 local function promote(window_id, to)
-    print(window_id)
     local surrounding_window_id = float_to_surrounding_window[window_id]
 
     if surrounding_window_id == nil then
         vim.api.nvim_err_writeln("[detour.nvim] Tried to promote a window that detour.nvim did not create.")
-        vim.print(float_to_surrounding_window)
         return
     end
 
@@ -69,7 +67,7 @@ local function promote(window_id, to)
     elseif to == "split" then
         local bufnr = vim.fn.bufnr()
         vim.api.nvim_set_current_win(surrounding_window_id)
-        vim.cmd.vsplit()
+        vim.cmd.split()
         vim.cmd.b(bufnr)
     elseif to == "tab" then
         local bufnr = vim.fn.bufnr()
