@@ -35,10 +35,10 @@ You can "promote" your popup to be a split (vertical or horizontal) or a tab.
     config = function ()
        local detour = require("detour")
        -- The keymaps here are just an example. You should find keymaps that work better for you.
-       vim.keymap.set('n', '<c-w><enter>', detour.Detour)
-       vim.keymap.set('n', '<c-w>,', detour.PromoteToTab)
-       vim.keymap.set('n', '<c-w>.', detour.PromoteToSplit)
-       vim.keymap.set('n', '<c-w>/', detour.PromoteToVsplit)
+       vim.keymap.set('n', '<c-w><enter>', ":Detour<cr>")
+       vim.keymap.set('n', '<c-w>,', ":PromoteToTab<cr>")
+       vim.keymap.set('n', '<c-w>.', ":PromoteToSplit<cr>")
+       vim.keymap.set('n', '<c-w>/', ":PromoteToVsplit<cr>")
    end
 },
 ```

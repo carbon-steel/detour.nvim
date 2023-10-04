@@ -23,6 +23,16 @@ local function construct_window_opts(surrounding_window_id)
     }
 end
 
+local function construct_augroup_name(window_id)
+    return "detour-"..window_id
+end
+
+local function teardownDetour(window_id)
+    vim.api.nvim_del_augroup_by_name(construct_augroup_name(window_id))
+    vim.api.nvim_win_close(window_id, false)
+    popup_to_surrounding_window[window_id] = nil
+end
+
 local function popup(bufnr)
     local surrounding_window_id = vim.api.nvim_get_current_win()
     for win, surr_win in pairs(popup_to_surrounding_window) do
@@ -39,7 +49,8 @@ local function popup(bufnr)
 
     local window_opts = construct_window_opts(0)
     local window_id = vim.api.nvim_open_win(bufnr, true, window_opts)
-    local augroup_id = vim.api.nvim_create_augroup("detour-"..window_id, {})
+    popup_to_surrounding_window[window_id] = surrounding_window_id
+    local augroup_id = vim.api.nvim_create_augroup(construct_augroup_name(window_id), {})
     vim.api.nvim_create_autocmd({"WinResized"}, {
         group = augroup_id,
         callback = function (e)
@@ -55,12 +66,9 @@ local function popup(bufnr)
         group = augroup_id,
         pattern = "" .. surrounding_window_id .. "," .. window_id,
         callback = function (e)
-            vim.api.nvim_del_augroup_by_id(augroup_id)
-            vim.api.nvim_win_close(window_id, false)
-            table.remove(popup_to_surrounding_window, window_id)
+            teardownDetour(window_id)
         end
     })
-    return surrounding_window_id, window_id
 end
 
 local function promote(window_id, to)
@@ -89,14 +97,11 @@ local function promote(window_id, to)
         vim.api.nvim_err_writeln("[detour.nvim]" .. to .. " is an invalid promotion")
         return
     end
-    vim.api.nvim_win_close(window_id, true)
+    teardownDetour(window_id)
 end
 
 M.Detour = function ()
-    local surrounding_window_id, window_id = popup(vim.api.nvim_get_current_buf())
-    if window_id ~= nil then
-        popup_to_surrounding_window[window_id] = surrounding_window_id
-    end
+    popup(vim.api.nvim_get_current_buf())
 end
 vim.api.nvim_create_user_command("Detour", M.Detour, {})
 
