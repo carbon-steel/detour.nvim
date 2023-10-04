@@ -92,23 +92,27 @@ local function promote(window_id, to)
     vim.api.nvim_win_close(window_id, true)
 end
 
-M.Popup = function ()
+M.Detour = function ()
     local surrounding_window_id, window_id = popup(vim.api.nvim_get_current_buf())
     if window_id ~= nil then
         popup_to_surrounding_window[window_id] = surrounding_window_id
     end
 end
+vim.api.nvim_create_user_command("Detour", M.Detour, {})
 
 M.PromoteToSplit = function ()
     promote(vim.api.nvim_get_current_win(), "split")
 end
+vim.api.nvim_create_user_command("PromoteToSplit", M.PromoteToSplit, {})
 
 M.PromoteToVsplit = function ()
     promote(vim.api.nvim_get_current_win(), "vsplit")
 end
+vim.api.nvim_create_user_command("PromoteToVsplit", M.PromoteToVsplit, {})
 
 M.PromoteToTab = function ()
     promote(vim.api.nvim_get_current_win(), "tab")
 end
+vim.api.nvim_create_user_command("PromoteToTab", M.PromoteToTab, {})
 
 return M
