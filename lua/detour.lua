@@ -1,6 +1,6 @@
 local M = {}
 
-local float_to_surrounding_window = {}
+local popup_to_surrounding_window = {}
 
 local function construct_window_opts(surrounding_window_id)
     local surrounding_width = vim.api.nvim_win_get_width(surrounding_window_id)
@@ -23,8 +23,20 @@ local function construct_window_opts(surrounding_window_id)
     }
 end
 
-local function float(bufnr)
+local function popup(bufnr)
     local surrounding_window_id = vim.api.nvim_get_current_win()
+    for win, surr_win in pairs(popup_to_surrounding_window) do
+        if surr_win == surrounding_window_id then
+            vim.api.nvim_err_writeln("Do not allow multiple popups for the same window.")
+            return nil, nil
+        end
+
+        if win == surrounding_window_id then
+            vim.api.nvim_err_writeln("Do not allow nested popups.")
+            return nil, nil
+        end
+    end
+
     local window_opts = construct_window_opts(0)
     local window_id = vim.api.nvim_open_win(bufnr, true, window_opts)
     local augroup_id = vim.api.nvim_create_augroup("detour-"..window_id, {})
@@ -45,14 +57,14 @@ local function float(bufnr)
         callback = function (e)
             vim.api.nvim_del_augroup_by_id(augroup_id)
             vim.api.nvim_win_close(window_id, false)
-            table.remove(float_to_surrounding_window, window_id)
+            table.remove(popup_to_surrounding_window, window_id)
         end
     })
     return surrounding_window_id, window_id
 end
 
 local function promote(window_id, to)
-    local surrounding_window_id = float_to_surrounding_window[window_id]
+    local surrounding_window_id = popup_to_surrounding_window[window_id]
 
     if surrounding_window_id == nil then
         vim.api.nvim_err_writeln("[detour.nvim] Tried to promote a window that detour.nvim did not create.")
@@ -80,9 +92,11 @@ local function promote(window_id, to)
     vim.api.nvim_win_close(window_id, true)
 end
 
-M.FloatWin = function ()
-    local surrounding_window_id, window_id = float(vim.api.nvim_get_current_buf())
-    float_to_surrounding_window[window_id] = surrounding_window_id
+M.Popup = function ()
+    local surrounding_window_id, window_id = popup(vim.api.nvim_get_current_buf())
+    if window_id ~= nil then
+        popup_to_surrounding_window[window_id] = surrounding_window_id
+    end
 end
 
 M.PromoteToSplit = function ()
