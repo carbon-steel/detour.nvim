@@ -1,6 +1,8 @@
 local M = {}
 
-local popup_to_surrounding_window = {}
+local util = require('util')
+
+local popup_to_covered_windows = {}
 
 local function construct_window_opts(surrounding_window_id)
     local surrounding_width = vim.api.nvim_win_get_width(surrounding_window_id)
@@ -30,26 +32,27 @@ end
 local function teardownDetour(window_id)
     vim.api.nvim_del_augroup_by_name(construct_augroup_name(window_id))
     vim.api.nvim_win_close(window_id, false)
-    popup_to_surrounding_window[window_id] = nil
+    popup_to_covered_windows[window_id] = nil
 end
 
-local function popup(bufnr)
+local function popup_inner(bufnr)
     local surrounding_window_id = vim.api.nvim_get_current_win()
-    for win, surr_win in pairs(popup_to_surrounding_window) do
-        if surr_win == surrounding_window_id then
+    for _, covered_windows in pairs(popup_to_covered_windows) do
+        if util.contains_value(covered_windows, surrounding_window_id) then
             vim.api.nvim_err_writeln("Do not allow multiple popups for the same window.")
-            return nil, nil
-        end
-
-        if win == surrounding_window_id then
-            vim.api.nvim_err_writeln("Do not allow nested popups.")
             return nil, nil
         end
     end
 
+    if util.contains_key(popup_to_covered_windows, surrounding_window_id) then
+        vim.api.nvim_err_writeln("Do not allow nested popups.")
+        return nil, nil
+    end
+
+
     local window_opts = construct_window_opts(0)
     local window_id = vim.api.nvim_open_win(bufnr, true, window_opts)
-    popup_to_surrounding_window[window_id] = surrounding_window_id
+    popup_to_covered_windows[window_id] = {surrounding_window_id}
     local augroup_id = vim.api.nvim_create_augroup(construct_augroup_name(window_id), {})
     vim.api.nvim_create_autocmd({"WinResized"}, {
         group = augroup_id,
@@ -71,8 +74,9 @@ local function popup(bufnr)
     })
 end
 
+-- TODO: reconsider how promotion works
 local function promote(window_id, to)
-    local surrounding_window_id = popup_to_surrounding_window[window_id]
+    local surrounding_window_id = popup_to_covered_windows[window_id]
 
     if surrounding_window_id == nil then
         vim.api.nvim_err_writeln("[detour.nvim] Tried to promote a window that detour.nvim did not create.")
@@ -81,12 +85,12 @@ local function promote(window_id, to)
 
     if to == "vsplit" then
         local bufnr = vim.fn.bufnr()
-        vim.api.nvim_set_current_win(surrounding_window_id)
+        vim.api.nvim_set_current_win(surrounding_window_id[0])
         vim.cmd.vsplit()
         vim.cmd.b(bufnr)
     elseif to == "split" then
         local bufnr = vim.fn.bufnr()
-        vim.api.nvim_set_current_win(surrounding_window_id)
+        vim.api.nvim_set_current_win(surrounding_window_id[0])
         vim.cmd.split()
         vim.cmd.b(bufnr)
     elseif to == "tab" then
@@ -100,10 +104,10 @@ local function promote(window_id, to)
     teardownDetour(window_id)
 end
 
-M.Detour = function ()
-    popup(vim.api.nvim_get_current_buf())
+M.DetourInner = function ()
+    popup_inner(vim.api.nvim_get_current_buf())
 end
-vim.api.nvim_create_user_command("Detour", M.Detour, {})
+vim.api.nvim_create_user_command("DetourInner", M.DetourInner, {})
 
 M.PromoteToSplit = function ()
     promote(vim.api.nvim_get_current_win(), "split")
