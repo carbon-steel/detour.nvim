@@ -91,8 +91,8 @@ local function construct_window_opts(coverable_windows, tabnr)
     end
 
     local top, bottom, left, right = unpack(dimensions)
-    local width = right - left
-    local height = bottom - top
+    local width = right - left - 1
+    local height = bottom - top - 1
     if width > 20 then
         width = width - 4
         left = left + 2
