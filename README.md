@@ -6,9 +6,14 @@ J.R.R. Tolkien, The Lord of the Rings
 </div>
 
 # Never lose your spot!📍🗺️
-[Screencast from 2023-10-09 20-48-04.webm](https://github.com/carbon-steel/detour.nvim/assets/7697639/d70f7b4c-207a-423d-b332-7c89d9db1ea8)
+`detour.nvim` provides the `:Detour` command that opens a popup window that you can use as you would a split window.
+
+Popups are better than splits during those times when you want to take a detour into some other files without losing your place in the current file. They also allow you to use the entire screen whereas a split would not.
+
+[Screencast from 2023-10-09 21-07-23.webm](https://github.com/carbon-steel/detour.nvim/assets/7697639/0326878b-d249-4d50-b7d1-193878f222d8)
 
 # Installation
+
 ## Lazy.nvim
 
 ```lua
