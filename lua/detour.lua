@@ -3,18 +3,104 @@ local M = {}
 local util = require('util')
 
 local popup_to_covered_windows = {}
+local function construct_window_opts(coverable_windows, tabnr)
+    local window_ids = util.flatten_layout(vim.fn.winlayout(tabnr))
+    --print("window_ids " .. vim.inspect(window_ids))
 
-local function construct_window_opts(surrounding_window_id)
-    local surrounding_width = vim.api.nvim_win_get_width(surrounding_window_id)
-    local surrounding_height = vim.api.nvim_win_get_height(surrounding_window_id)
-    local surrounding_top, surrounding_left = unpack(vim.api.nvim_win_get_position(surrounding_window_id))
+    local uncoverable_windows = {}
+    for _, window_id in ipairs(window_ids) do
+        if not util.contains_element(coverable_windows, window_id) then
+            table.insert(uncoverable_windows, window_id)
+        end
+    end
+    --print("uncoverable_windows " .. vim.inspect(uncoverable_windows))
+    local horizontals = {}
+    local verticals = {}
 
-    local width = (surrounding_width > 20) and (surrounding_width - 6) or surrounding_width
-    local height = (surrounding_height > 10) and (surrounding_height - 4) or surrounding_height
+    for _, window_id in ipairs(window_ids) do
+        -- ignore floating windows
+        if vim.api.nvim_win_get_config(window_id).relative == '' then
+            local top, bottom, left, right = util.get_window_coordinates(window_id)
+            horizontals[top] = 1
+            horizontals[bottom] = 1
+            verticals[left] = 1
+            verticals[right] = 1
+        end
+    end
 
-    local top = surrounding_top + math.floor((surrounding_height - height) / 2)
-    local left = surrounding_left + math.floor((surrounding_width - width) / 2)
+    --print( "horizontals " .. vim.inspect(horizontals))
+    --print( "verticals " .. vim.inspect(verticals))
 
+    local floors = {}
+    local sides = {}
+
+    for top, _ in pairs(horizontals) do
+        for bottom, _ in pairs(horizontals) do
+            if top < bottom then
+                table.insert(floors, {top, bottom})
+            end
+        end
+    end
+
+    for left, _ in pairs(verticals) do
+        for right, _ in pairs(verticals) do
+            if left < right then
+                table.insert(sides, {left, right})
+            end
+        end
+    end
+
+    --print( "floors " .. vim.inspect(floors))
+    --print( "sides " .. vim.inspect(sides))
+
+    local max_area = 0
+    local dimensions = nil
+    for _, curr_floors in ipairs(floors) do
+        local top, bottom = unpack(curr_floors)
+        for _, curr_sides in ipairs(sides) do
+            local left, right = unpack(curr_sides)
+            local legal = true
+            for _, uncoverable_window in ipairs(uncoverable_windows) do
+                local uncoverable_top, uncoverable_bottom, uncoverable_left, uncoverable_right = util.get_window_coordinates(uncoverable_window)
+                local lowest_top = math.max(top, uncoverable_top)
+                local highest_bottom = math.min(bottom, uncoverable_bottom)
+                local rightest_left = math.max(left, uncoverable_left)
+                local leftest_right = math.min(right, uncoverable_right)
+                if (lowest_top < highest_bottom) and (rightest_left < leftest_right) then
+                    --print("top " .. top)
+                    --print("bottom " .. bottom)
+                    --print("left " .. left)
+                    --print("right " .. right)
+
+                    --print("illegal!")
+                    legal = false
+                end
+            end
+
+            local area = (bottom - top) * (right - left)
+            if legal and (area > max_area) then
+                dimensions = {top, bottom, left, right}
+                max_area = area
+            end
+        end
+    end
+
+    if dimensions == nil then
+        vim.api.nvim_err_writeln("[detour.nvim] was unable to find a spot to create a popup.")
+        return nil
+    end
+
+    local top, bottom, left, right = unpack(dimensions)
+    local width = right - left
+    local height = bottom - top
+    if width > 20 then
+        width = width - 4
+        left = left + 2
+    end
+    if height > 14 then
+        height = height - 4
+        top = top + 2
+    end
     return {
         relative = "editor",
         row = top,
@@ -35,93 +121,69 @@ local function teardownDetour(window_id)
     popup_to_covered_windows[window_id] = nil
 end
 
-local function popup_inner(bufnr)
-    local surrounding_window_id = vim.api.nvim_get_current_win()
-    for _, covered_windows in pairs(popup_to_covered_windows) do
-        if util.contains_value(covered_windows, surrounding_window_id) then
-            vim.api.nvim_err_writeln("Do not allow multiple popups for the same window.")
-            return nil, nil
+local function popup(bufnr)
+    local tabnr = vim.api.nvim_get_current_tabpage()
+    local covered_windows = {}
+    for _, window in ipairs(util.flatten_layout(vim.fn.winlayout(tabnr))) do
+        local legal = true
+        for _, unavailable_windows in pairs(popup_to_covered_windows) do
+            if util.contains_value(unavailable_windows, window) then
+                legal = false
+            end
+        end
+        if legal then
+            table.insert(covered_windows, window)
         end
     end
 
-    if util.contains_key(popup_to_covered_windows, surrounding_window_id) then
-        vim.api.nvim_err_writeln("Do not allow nested popups.")
-        return nil, nil
-    end
-
-
-    local window_opts = construct_window_opts(0)
-    local window_id = vim.api.nvim_open_win(bufnr, true, window_opts)
-    popup_to_covered_windows[window_id] = {surrounding_window_id}
-    local augroup_id = vim.api.nvim_create_augroup(construct_augroup_name(window_id), {})
+    local window_opts = construct_window_opts(covered_windows, tabnr)
+    local popup_id = vim.api.nvim_open_win(bufnr, true, window_opts)
+    popup_to_covered_windows[popup_id] = covered_windows
+    local augroup_id = vim.api.nvim_create_augroup(construct_augroup_name(popup_id), {})
     vim.api.nvim_create_autocmd({"WinResized"}, {
         group = augroup_id,
         callback = function (e)
             for x, _ in ipairs(vim.v.event.windows) do
-                if vim.fn.win_getid(x) == surrounding_window_id then
-                    local new_window_opts = construct_window_opts(surrounding_window_id)
-                    vim.api.nvim_win_set_config(window_id, new_window_opts)
+                if util.contains_element(covered_windows, vim.fn.win_getid(x)) then
+                    local new_window_opts = construct_window_opts(covered_windows, tabnr)
+                    vim.api.nvim_win_set_config(popup_id, new_window_opts)
                 end
             end
         end
     })
     vim.api.nvim_create_autocmd({"WinClosed"}, {
         group = augroup_id,
-        pattern = "" .. surrounding_window_id .. "," .. window_id,
-        callback = function (e)
-            teardownDetour(window_id)
+        pattern = "" .. popup_id,
+        callback = function ()
+            teardownDetour(popup_id)
         end
     })
-end
 
--- TODO: reconsider how promotion works
-local function promote(window_id, to)
-    local surrounding_window_id = popup_to_covered_windows[window_id]
+    for _, triggering_window in ipairs(covered_windows) do
+        vim.api.nvim_create_autocmd({"WinClosed"}, {
+            group = augroup_id,
+            pattern = "" .. triggering_window,
+            callback = function (e)
+                local all_closed = true
+                local open_windows = util.flatten_layout(vim.fn.winlayout(tabnr))
+                for _, covered_window in ipairs(covered_windows) do
+                    if util.contains_element(open_windows, covered_window) and covered_window ~= triggering_window then
+                        all_closed = false
+                    end
+                end
 
-    if surrounding_window_id == nil then
-        vim.api.nvim_err_writeln("[detour.nvim] Tried to promote a window that detour.nvim did not create.")
-        return
+                if all_closed then
+                    print("tearing down")
+                    teardownDetour(popup_id)
+                end
+            end
+        })
     end
-
-    if to == "vsplit" then
-        local bufnr = vim.fn.bufnr()
-        vim.api.nvim_set_current_win(surrounding_window_id[0])
-        vim.cmd.vsplit()
-        vim.cmd.b(bufnr)
-    elseif to == "split" then
-        local bufnr = vim.fn.bufnr()
-        vim.api.nvim_set_current_win(surrounding_window_id[0])
-        vim.cmd.split()
-        vim.cmd.b(bufnr)
-    elseif to == "tab" then
-        local bufnr = vim.fn.bufnr()
-        vim.cmd.tabedit()
-        vim.cmd.b(bufnr)
-    else
-        vim.api.nvim_err_writeln("[detour.nvim]" .. to .. " is an invalid promotion")
-        return
-    end
-    teardownDetour(window_id)
 end
 
-M.DetourInner = function ()
-    popup_inner(vim.api.nvim_get_current_buf())
+M.Detour = function ()
+    popup(vim.api.nvim_get_current_buf())
 end
-vim.api.nvim_create_user_command("DetourInner", M.DetourInner, {})
-
-M.PromoteToSplit = function ()
-    promote(vim.api.nvim_get_current_win(), "split")
-end
-vim.api.nvim_create_user_command("PromoteToSplit", M.PromoteToSplit, {})
-
-M.PromoteToVsplit = function ()
-    promote(vim.api.nvim_get_current_win(), "vsplit")
-end
-vim.api.nvim_create_user_command("PromoteToVsplit", M.PromoteToVsplit, {})
-
-M.PromoteToTab = function ()
-    promote(vim.api.nvim_get_current_win(), "tab")
-end
-vim.api.nvim_create_user_command("PromoteToTab", M.PromoteToTab, {})
+vim.api.nvim_create_user_command("Detour", M.Detour, {})
 
 return M
