@@ -6,26 +6,7 @@ J.R.R. Tolkien, The Lord of the Rings
 </div>
 
 # Never lose your spot!📍🗺️
-The programming process always includes interruptions where we stop writing code and go read some other code. This Neovim plugin helps us find our way back from these detours.
-
-(Neo)Vim users often encapsulate detours in a split or a tab. However,
-
-* 👎 Splits "split" your screen's space
-* 👎 Some people don't clean up their splits/tabs[^1]
-[^1]: no shame if you're one of them
-
-What if we used a popup window instead?
-
-# How to use
-## Typical Use
-`detour.nvim` allows you to open a popup window containing your current buffer. You can treat that popup window as you would a new split or tab. That means you can switch to other files and locations. When you want to come back to where you started, just close the window.
-
-[Screencast from 2023-09-30 10-16-12.webm](https://github.com/carbon-steel/detour.nvim/assets/7697639/8ebef6a8-c125-497f-83a0-82546ae2ac28)
-
-## Promote to a split
-You can "promote" your popup to be a split (vertical or horizontal) or a tab.
-
-[Screencast from 2023-09-30 13-20-04.webm](https://github.com/carbon-steel/detour.nvim/assets/7697639/7aa55e35-aacd-4346-b1dc-926f1f1b8588)
+[Screencast from 2023-10-09 20-48-04.webm](https://github.com/carbon-steel/detour.nvim/assets/7697639/d70f7b4c-207a-423d-b332-7c89d9db1ea8)
 
 # Installation
 ## Lazy.nvim
