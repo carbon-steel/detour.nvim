@@ -27,26 +27,15 @@ function M.contains_value(array, target)
     return false
 end
 
-function M.flatten_layout(layout)
-    --print("layout " .. vim.inspect(layout))
-    local window_ids = {}
-    for _, value in ipairs(layout) do
-        if type(value) == 'number' then
-            table.insert(window_ids, value)
-        elseif type(value) == 'table' then
-            for _, window_id in ipairs(M.flatten_layout(value)) do
-                table.insert(window_ids, window_id)
-            end
-        end
-    end
-    return window_ids
-end
-
 function M.get_window_coordinates(window_id)
     local top, left = unpack(vim.api.nvim_win_get_position(window_id))
     local bottom = top + vim.api.nvim_win_get_height(window_id)
     local right = left + vim.api.nvim_win_get_width(window_id)
     return top, bottom, left, right
+end
+
+function M.is_floating(window_id)
+    return vim.api.nvim_win_get_config(window_id).relative ~= ''
 end
 
 return M
