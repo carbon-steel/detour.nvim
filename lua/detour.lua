@@ -186,7 +186,7 @@ end
 
 local function popup(bufnr)
     local parent = vim.api.nvim_get_current_win()
-    if util.contains_key(popup_to_covered_windows, parent) then
+    if util.is_floating(parent) then
         nested_popup()
         return
     end
