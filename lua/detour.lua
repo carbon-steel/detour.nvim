@@ -135,6 +135,7 @@ local function construct_augroup_name(window_id)
 end
 
 local popup_to_layer = {}
+-- Needs to be idempotent
 local function teardownDetour(window_id)
     vim.api.nvim_del_augroup_by_name(construct_augroup_name(window_id))
     vim.api.nvim_win_close(window_id, false)
@@ -180,6 +181,7 @@ local function nested_popup()
         pattern = "" .. parent,
         callback = function ()
             teardownDetour(child)
+            vim.cmd.doautocmd("WinClosed "..child)
         end
     })
 end
