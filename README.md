@@ -25,3 +25,17 @@ Popups are better than splits during those times when you want to take a detour 
    end
 },
 ```
+
+# FAQ
+> I want to convert popups to splits or tabs.
+
+`<C-w>s` and `<C-w>v` can be used from within a popup to create splits. `<C-w>T` creates tabs.
+
+> My LSP keeps moving my cursor to other windows.
+
+If your LSP movements (ex: `go-to-definition`) are opening locations in other windows, make sure that you're not calling these movements with the `reuse_win` set to `true`.
+
+> My popups don't look good.
+
+Some colorschemes don't have visually clear floating window border colors. Consider customizing your colorscheme's FloatBorder to a color that makes your popups clearer.
+
