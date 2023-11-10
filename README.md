@@ -19,11 +19,32 @@ Popups are better than splits during those times when you want to take a detour 
 ```lua
 { "carbon-steel/detour.nvim",
     config = function ()
-       local detour = require("detour")
-       -- The keymaps here are just an example. You should find keymaps that work better for you.
        vim.keymap.set('n', '<c-w><enter>', ":Detour<cr>")
    end
 },
+```
+
+# Recipes
+`detour.nvim` is capable of more than just reading files. It generalizes the floating window behavior of plugins such as toggleterm.nvim or lazygit.nvim. `detour.nvim` can wrap any TUI in a floating window. Its applications don't stop at just TUIs. Here are some examples:
+
+```lua
+-- Wrap any TUI inside a detour popup
+vim.keymap.set("n", '<leader>p', function ()
+    require('detour').Detour() -- open a detour popup
+    vim.cmd.terminal() -- open a terminal buffer
+    vim.bo.bufhidden = 'delete' -- close the terminal when window closes
+    -- Run the `top` command
+    local text = vim.api.nvim_replace_termcodes("atop<CR>", true, false, true)
+    vim.api.nvim_feedkeys(text, "n", false)
+end)
+
+-- A keymap for opening a prompt to select a terminal buffer to open in a popup
+vim.keymap.set('n', '<leader>t', function()
+    require('detour').Detour() -- Open a detour popup
+    vim.cmd.enew() -- Swith to a blank buffer to prevent any accidental changes
+    require('telescope.builtin').buffers({}) -- Open telescope prompt
+    vim.api.nvim_feedkeys("term", "n", true) -- popuplate prompt with "term"
+end)
 ```
 
 # FAQ
