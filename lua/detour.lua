@@ -3,10 +3,7 @@ local M = {}
 local util = require('util')
 
 local popup_to_covered_windows = {}
-local last_constructed = {}
 local function construct_window_opts(coverable_windows, tab_id)
-    last_constructed["coverable_windows"] = coverable_windows
-    last_constructed["tab_id"] = tab_id
     local window_ids = {}
     for _, window_id in ipairs(vim.api.nvim_tabpage_list_wins(tab_id)) do
         if not util.is_floating(window_id) then
@@ -257,11 +254,5 @@ end
 M.Detour = function ()
     popup(vim.api.nvim_get_current_buf())
 end
-
-vim.api.nvim_create_user_command("Detour", M.Detour, {})
-vim.api.nvim_create_user_command("DetourDebug", function ()
-    print("popup_to_covered_windows:\n"..vim.inspect(popup_to_covered_windows))
-    print("last_constructed\n"..vim.inspect(last_constructed))
-end, {})
 
 return M
