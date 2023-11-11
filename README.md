@@ -8,7 +8,12 @@ J.R.R. Tolkien, The Lord of the Rings
 # Never lose your spot!📍🗺️
 `detour.nvim` provides the `:Detour` command that opens a popup window that you can use as you would a split window.
 
-Popups are better than splits during those times when you want to take a detour into some other files without losing your place in the current file. They also allow you to use the entire screen whereas a split would not.
+`detour.nvim` has two uses:
+* Use popups instead of splits
+    * Popups are better than splits during those times when you want to take a detour into some other files without losing your place in the current file.
+    * They also allow you to use the entire screen whereas a split would not.
+* Provide a large popup windows for TUIs, scripts, and commands.
+    * This feature is similar to what `toggleterm.nvim` and `lazygit.nvim` do for you.
 
 [Screencast from 2023-10-09 21-07-23.webm](https://github.com/carbon-steel/detour.nvim/assets/7697639/0326878b-d249-4d50-b7d1-193878f222d8)
 
@@ -28,22 +33,37 @@ Popups are better than splits during those times when you want to take a detour 
 `detour.nvim` is capable of more than just reading files. It generalizes the floating window behavior of plugins such as toggleterm.nvim or lazygit.nvim. `detour.nvim` can wrap any TUI in a floating window. Its applications don't stop at just TUIs. Here are some examples:
 
 ```lua
--- Wrap any TUI inside a detour popup
+-- A keymap for opening a prompt to select a terminal buffer to open in a popup
+vim.keymap.set('n', '<leader>t', function()
+    require('detour').Detour()               -- Open a detour popup
+    -- Switch to a blank buffer to prevent any accidental changes
+    vim.cmd.enew()
+    require('telescope.builtin').buffers({}) -- Open telescope prompt
+    vim.api.nvim_feedkeys("term", "n", true) -- popuplate prompt with "term"
+end)
+
+-- Wrap any TUI inside a popup
 vim.keymap.set("n", '<leader>p', function ()
-    require('detour').Detour() -- open a detour popup
-    vim.cmd.terminal() -- open a terminal buffer
+    require('detour').Detour()  -- open a detour popup
+    vim.cmd.terminal()          -- open a terminal buffer
     vim.bo.bufhidden = 'delete' -- close the terminal when window closes
     -- Run the `top` command
     local text = vim.api.nvim_replace_termcodes("atop<CR>", true, false, true)
     vim.api.nvim_feedkeys(text, "n", false)
 end)
 
--- A keymap for opening a prompt to select a terminal buffer to open in a popup
-vim.keymap.set('n', '<leader>t', function()
-    require('detour').Detour() -- Open a detour popup
-    vim.cmd.enew() -- Swith to a blank buffer to prevent any accidental changes
-    require('telescope.builtin').buffers({}) -- Open telescope prompt
-    vim.api.nvim_feedkeys("term", "n", true) -- popuplate prompt with "term"
+-- A keymap for running tig in a popup
+vim.keymap.set('n', '<leader>g', function()
+    local current_path = vim.fn.expand("%:p:h")
+    local command = "a".. -- go into terminal mode
+                "cd ".. current_path .. "<CR>" ..
+                "tig<CR>" -- run tig
+    command = vim.api.nvim_replace_termcodes(command, true, false, true)
+
+    require('detour').Detour()  -- open a detour popup
+    vim.cmd.terminal()          -- open a terminal buffer
+    vim.bo.bufhidden = 'delete' -- close the terminal when window closes
+    vim.api.nvim_feedkeys(command, "n", false)
 end)
 ```
 
