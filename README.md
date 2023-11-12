@@ -9,16 +9,21 @@ J.R.R. Tolkien, The Lord of the Rings
 ![detour](https://github.com/carbon-steel/detour.nvim/assets/7697639/63a88fd3-f910-4e42-9664-0e14fe88d066)
 
 # Never lose your spot!📍🗺️
-`detour.nvim` provides the `:Detour` command that opens a popup window that you can use as you would a split window.
+> What does detour.nvim do?
+
+Provides the `:Detour` command *(and `require('detour').Detour()` in lua)* that opens a popup window.
 
 `detour.nvim` has two uses:
 * Use popup windows instead of split windows
-    * Popups preserve your position in the current file during detours into other files (just like splits)
-    * Popups can use the entire screen (unlike splits)
+  
+  :+1: Popups preserve your position in the current file during detours into other files *(just like splits)*
+
+  :+1: Popups can use the entire screen *(unlike splits)*
+
 * Provide a large popup windows for TUIs, scripts, and commands.
     * This plugin can be considered a generalized version of [`toggleterm.nvim`](https://github.com/akinsho/toggleterm.nvim) and [`lazygit.nvim`](https://github.com/kdheepak/lazygit.nvim).
 
-| |
+| Basic Usage |
 | :--: |
 | **Open a popup -> Go to different file -> Create vertical split -> Close popup** |
 | ![basic](https://github.com/carbon-steel/detour.nvim/assets/7697639/3a408a14-8b9d-4bd4-90db-e633c5f97b7c) |
@@ -40,7 +45,7 @@ J.R.R. Tolkien, The Lord of the Rings
 
 Here are some examples of what you can do...
 
-### Telescope synergy
+### Use with Telescope
 
 ```lua
 -- A keymap for selecting a terminal buffer to open in a popup
