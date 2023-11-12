@@ -36,14 +36,14 @@ J.R.R. Tolkien, The Lord of the Rings
 ```
 
 # Recipes
-`detour.nvim` is capable of more than just reading files. It generalizes the floating window behavior of plugins such as toggleterm.nvim or lazygit.nvim. `detour.nvim` can wrap any TUI in a floating window. Its applications don't stop at just TUIs. You can use `Detour()` with any lua code.
+`detour.nvim` is capable of more than just displaying file buffers. It generalizes the floating window behavior of plugins such as [`toggleterm.nvim`](https://github.com/akinsho/toggleterm.nvim) and [`lazygit.nvim`](https://github.com/kdheepak/lazygit.nvim). It is as flexible as (Neo)Vim's split window mechanism.
 
-Here are some examples...
+Here are some examples of what you can do...
 
-### Terminal management
+### Telescope synergy
 
 ```lua
--- A keymap for opening a prompt to select a terminal buffer to open in a popup
+-- A keymap for selecting a terminal buffer to open in a popup
 vim.keymap.set('n', '<leader>t', function()
     require('detour').Detour()               -- Open a detour popup
 
@@ -60,7 +60,7 @@ end)
 | **Open two terminal buffers -> Use the keymap above -> Select desired terminal** |
 | ![term](https://github.com/carbon-steel/detour.nvim/assets/7697639/775cd697-d47e-4d3c-9aaf-9f7f86c266f0) |
 
-### Git TUI
+### Wrap a TUI: tig
 
 ```lua
 -- A keymap for running tig in a popup
@@ -84,7 +84,7 @@ end)
 | ![tig2](https://github.com/carbon-steel/detour.nvim/assets/7697639/7dd84b42-26d8-487b-8486-aa08e0fef5c8) |
 
 
-### top
+### Wrap a TUI: top
 ```lua
 -- Wrap any TUI inside a popup
 vim.keymap.set("n", '<leader>p', function ()
