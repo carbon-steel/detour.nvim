@@ -4,6 +4,7 @@
 <div dir="rtl">
 J.R.R. Tolkien, The Lord of the Rings 
 </div>
+</br></br>
 
 ![detour](https://github.com/carbon-steel/detour.nvim/assets/7697639/63a88fd3-f910-4e42-9664-0e14fe88d066)
 
@@ -11,19 +12,20 @@ J.R.R. Tolkien, The Lord of the Rings
 `detour.nvim` provides the `:Detour` command that opens a popup window that you can use as you would a split window.
 
 `detour.nvim` has two uses:
-* Use popups instead of splits
-    * Popups are better than splits during those times when you want to take a detour into some other files without losing your place in the current file.
-    * They also allow you to use the entire screen whereas a split would not.
+* Use popup windows instead of split windows
+    * Popups preserve your position in the current file during detours into other files (just like splits)
+    * Popups can use the entire screen (unlike splits)
 * Provide a large popup windows for TUIs, scripts, and commands.
-    * This feature is similar to what `toggleterm.nvim` and `lazygit.nvim` do for you.
+    * This plugin can be considered a generalized version of [`toggleterm.nvim`](https://github.com/akinsho/toggleterm.nvim) and [`lazygit.nvim`](https://github.com/kdheepak/lazygit.nvim).
 
+| |
+| :--: |
+| **Open a popup -> Go to different file -> Create vertical split -> Close popup** |
 | ![basic](https://github.com/carbon-steel/detour.nvim/assets/7697639/3a408a14-8b9d-4bd4-90db-e633c5f97b7c) |
-|:--:| 
-| *Open a popup -> Go to different file -> Create vertical split -> Close popup* |
 
 # Installation
 
-## Lazy.nvim
+### Lazy.nvim
 
 ```lua
 { "carbon-steel/detour.nvim",
@@ -36,9 +38,7 @@ J.R.R. Tolkien, The Lord of the Rings
 # Recipes
 `detour.nvim` is capable of more than just reading files. It generalizes the floating window behavior of plugins such as toggleterm.nvim or lazygit.nvim. `detour.nvim` can wrap any TUI in a floating window. Its applications don't stop at just TUIs. You can use `Detour()` with any lua code.
 
-Here are some examples:
-
-</br>
+Here are some examples...
 
 ### Terminal management
 
@@ -55,9 +55,10 @@ vim.keymap.set('n', '<leader>t', function()
     vim.api.nvim_feedkeys("term", "n", true) -- popuplate prompt with "term"
 end)
 ```
-| ![term](https://github.com/carbon-steel/detour.nvim/assets/7697639/775cd697-d47e-4d3c-9aaf-9f7f86c266f0) |
+||
 |:--:|
-| *Open two terminal buffers -> Use the keymap above -> Select desired terminal* |
+| **Open two terminal buffers -> Use the keymap above -> Select desired terminal** |
+| ![term](https://github.com/carbon-steel/detour.nvim/assets/7697639/775cd697-d47e-4d3c-9aaf-9f7f86c266f0) |
 
 ### Git TUI
 
@@ -76,9 +77,12 @@ vim.keymap.set('n', '<leader>g', function()
     vim.api.nvim_feedkeys(command, "n", false)
 end)
 ```
-| ![tig2](https://github.com/carbon-steel/detour.nvim/assets/7697639/7dd84b42-26d8-487b-8486-aa08e0fef5c8) |
+
+||
 |:--:|
-| *Use keymap above -> Close tig* |
+| **Use keymap above -> Close window** |
+| ![tig2](https://github.com/carbon-steel/detour.nvim/assets/7697639/7dd84b42-26d8-487b-8486-aa08e0fef5c8) |
+
 
 ### top
 ```lua
@@ -93,6 +97,10 @@ vim.keymap.set("n", '<leader>p', function ()
 end)
 
 ```
+
+||
+| :--: |
+| **Use keymap above -> Close window** |
 ![top](https://github.com/carbon-steel/detour.nvim/assets/7697639/49dd12ab-630b-4558-9486-fe82cc94882c)
 
 
