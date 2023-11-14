@@ -1,6 +1,6 @@
 local M = {}
 
-local util = require('util')
+local util = require('detour_util')
 
 local popup_to_covered_windows = {}
 local function construct_window_opts(coverable_windows, tab_id)
