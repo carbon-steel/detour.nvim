@@ -177,7 +177,6 @@ local function nested_popup()
         group = augroup_id,
         pattern = "" .. parent,
         callback = function ()
-            teardownDetour(child)
             vim.cmd.doautocmd("WinClosed "..child)
         end
     })
@@ -245,6 +244,7 @@ local function popup(bufnr)
                 if all_closed then
                     --print("tearing down")
                     teardownDetour(popup_id)
+                    vim.cmd.doautocmd("WinClosed ".. popup_id)
                 end
             end
         })
