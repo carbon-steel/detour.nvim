@@ -1,6 +1,6 @@
 local M = {}
 
-local util = require('detour_util')
+local util = require('detour.util')
 
 local popup_to_covered_windows = {}
 local function construct_window_opts(coverable_windows, tab_id)
@@ -177,7 +177,6 @@ local function nested_popup()
         group = augroup_id,
         pattern = "" .. parent,
         callback = function ()
-            teardownDetour(child)
             vim.cmd.doautocmd("WinClosed "..child)
         end
     })
@@ -245,6 +244,7 @@ local function popup(bufnr)
                 if all_closed then
                     --print("tearing down")
                     teardownDetour(popup_id)
+                    vim.cmd.doautocmd("WinClosed ".. popup_id)
                 end
             end
         })
