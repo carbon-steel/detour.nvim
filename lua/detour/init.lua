@@ -214,7 +214,7 @@ local function popup(bufnr)
         group = augroup_id,
         callback = function ()
             for _, x in ipairs(vim.v.event.windows) do
-                if util.contains_element(covered_windows, x) then
+                if util.contains_element(vim.api.nvim_tabpage_list_wins(tab_id), x) then
                     local new_window_opts = construct_window_opts(covered_windows, tab_id)
                     resize_popup(popup_id, new_window_opts)
                     break

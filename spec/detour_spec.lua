@@ -9,6 +9,23 @@ local function switch_to_window(window_id)
     end
 end
 
+local function overlap(win_a, win_b)
+    local top_a, bottom_a, left_a, right_a = util.get_window_coordinates(win_a)
+    local top_b, bottom_b, left_b, right_b = util.get_window_coordinates(win_b)
+    print(top_a, bottom_a, left_a, right_a)
+    print(top_b, bottom_b, left_b, right_b)
+
+    if math.max(left_a, left_b) > math.min(right_a, right_b) then
+        return false
+    end
+
+    if math.max(top_a, top_b) > math.min(bottom_a, bottom_b) then
+        return false
+    end
+
+    return true
+end
+
 describe("detour", function ()
     before_each(function ()
         vim.cmd[[
@@ -103,5 +120,22 @@ describe("detour", function ()
         assert.True(util.contains_element(windows, split_window))
         assert.True(util.contains_element(windows, split_popup))
         assert.same(#windows, 2)
+    end)
+
+    it("react to a coverable window closing", function ()
+        pending("WinResized doesn't seem to work when running nvim as a command.")
+        vim.cmd.wincmd('v')
+        local coverable_window = vim.api.nvim_get_current_win()
+        detour.Detour()
+        local popup = vim.api.nvim_get_current_win()
+        switch_to_window(coverable_window)
+        vim.cmd.wincmd('s')
+        local uncoverable_win = vim.api.nvim_get_current_win()
+        switch_to_window(coverable_window)
+        print(util.get_window_coordinates(uncoverable_win))
+        vim.cmd.close()
+        print(util.get_window_coordinates(uncoverable_win))
+
+        assert.False(overlap(popup, uncoverable_win))
     end)
 end)
