@@ -149,6 +149,15 @@ local function stringify(number)
     return string.char(unpack(values))
 end
 
+local function is_available(window)
+    for _, unavailable_windows in pairs(popup_to_covered_windows) do
+        if util.contains_value(unavailable_windows, window) then
+            return false
+        end
+    end
+    return true
+end
+
 local function resize_popup(window_id, window_opts)
     vim.api.nvim_win_set_config(window_id, window_opts)
     vim.cmd.doautocmd("User PopupResized"..stringify(window_id))
@@ -156,9 +165,16 @@ end
 
 local function nested_popup()
     local parent = vim.api.nvim_get_current_win()
+
+    if not is_available(parent) then
+        vim.api.nvim_err_writeln("[detour.nvim] This popup already has a child nested inside it:" .. parent)
+        return
+    end
+
     local window_opts = construct_nest(parent, popup_to_layer[parent] + 1)
     local child = vim.api.nvim_open_win(vim.api.nvim_win_get_buf(0), true, window_opts)
     popup_to_layer[child] =  popup_to_layer[parent] + 1
+    popup_to_covered_windows[child] = { parent }
     local augroup_id = vim.api.nvim_create_augroup(construct_augroup_name(child), {})
     vim.api.nvim_create_autocmd({"User"}, {
         pattern = "PopupResized"..stringify(parent),
@@ -185,37 +201,50 @@ local function nested_popup()
     })
 end
 
-local function popup(bufnr)
+local function popup(bufnr, coverable_windows)
     local parent = vim.api.nvim_get_current_win()
     if util.is_floating(parent) then
         nested_popup()
         return
     end
     local tab_id = vim.api.nvim_get_current_tabpage()
-    local covered_windows = {}
-    for _, window in ipairs(vim.api.nvim_tabpage_list_wins(tab_id)) do
-        local legal = true
-        for _, unavailable_windows in pairs(popup_to_covered_windows) do
-            if util.contains_value(unavailable_windows, window) then
-                legal = false
+    if coverable_windows == nil then
+        coverable_windows = {}
+        for _, window in ipairs(vim.api.nvim_tabpage_list_wins(tab_id)) do
+            if not util.is_floating(window) and is_available(window) then
+                table.insert(coverable_windows, window)
             end
-        end
-        if legal then
-            table.insert(covered_windows, window)
         end
     end
 
-    local window_opts = construct_window_opts(covered_windows, tab_id)
+    if #coverable_windows == 0 then
+        vim.api.nvim_err_writeln("[detour.nvim] No windows provided in coverable_windows.")
+        return
+    end
+
+    for _, window in ipairs(coverable_windows) do
+        if util.is_floating(window) then
+            vim.api.nvim_err_writeln("[detour.nvim] No floating windows allowed in base (ie, non-nested) popup" .. window)
+            return
+        end
+
+        if not is_available(window) then
+            vim.api.nvim_err_writeln("[detour.nvim] This window is already reserved by another popup:" .. window)
+            return
+        end
+    end
+
+    local window_opts = construct_window_opts(coverable_windows, tab_id)
     local popup_id = vim.api.nvim_open_win(bufnr, true, window_opts)
     popup_to_layer[popup_id] = 1
-    popup_to_covered_windows[popup_id] = covered_windows
+    popup_to_covered_windows[popup_id] = coverable_windows
     local augroup_id = vim.api.nvim_create_augroup(construct_augroup_name(popup_id), {})
     vim.api.nvim_create_autocmd({"WinResized"}, {
         group = augroup_id,
         callback = function ()
             for _, x in ipairs(vim.v.event.windows) do
                 if util.contains_element(vim.api.nvim_tabpage_list_wins(tab_id), x) then
-                    local new_window_opts = construct_window_opts(covered_windows, tab_id)
+                    local new_window_opts = construct_window_opts(coverable_windows, tab_id)
                     resize_popup(popup_id, new_window_opts)
                     break
                 end
@@ -230,14 +259,14 @@ local function popup(bufnr)
         end
     })
 
-    for _, triggering_window in ipairs(covered_windows) do
+    for _, triggering_window in ipairs(coverable_windows) do
         vim.api.nvim_create_autocmd({"WinClosed"}, {
             group = augroup_id,
             pattern = "" .. triggering_window,
             callback = function ()
                 local all_closed = true
                 local open_windows = vim.api.nvim_tabpage_list_wins(tab_id)
-                for _, covered_window in ipairs(covered_windows) do
+                for _, covered_window in ipairs(coverable_windows) do
                     if util.contains_element(open_windows, covered_window) and covered_window ~= triggering_window then
                         all_closed = false
                     end
@@ -255,6 +284,10 @@ end
 
 M.Detour = function ()
     popup(vim.api.nvim_get_current_buf())
+end
+
+M.DetourCurrentWindow = function ()
+    popup(vim.api.nvim_get_current_buf(), {vim.api.nvim_get_current_win()})
 end
 
 return M
