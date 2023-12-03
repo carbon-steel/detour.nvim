@@ -149,6 +149,11 @@ local function stringify(number)
     return string.char(unpack(values))
 end
 
+local function resize_popup(window_id, window_opts)
+    vim.api.nvim_win_set_config(window_id, window_opts)
+    vim.cmd.doautocmd("User PopupResized"..stringify(window_id))
+end
+
 local function nested_popup()
     local parent = vim.api.nvim_get_current_win()
     local window_opts = construct_nest(parent, popup_to_layer[parent] + 1)
@@ -160,9 +165,7 @@ local function nested_popup()
         group = augroup_id,
         callback = function ()
             local new_window_opts = construct_nest(parent)
-            vim.api.nvim_win_set_config(child, new_window_opts)
-
-            vim.cmd.doautocmd("User PopupResized"..stringify(child))
+            resize_popup(child, new_window_opts)
         end
     })
     vim.api.nvim_create_autocmd({"WinClosed"}, {
@@ -213,8 +216,7 @@ local function popup(bufnr)
             for _, x in ipairs(vim.v.event.windows) do
                 if util.contains_element(covered_windows, x) then
                     local new_window_opts = construct_window_opts(covered_windows, tab_id)
-                    vim.api.nvim_win_set_config(popup_id, new_window_opts)
-                    vim.cmd.doautocmd("User PopupResized"..stringify(popup_id))
+                    resize_popup(popup_id, new_window_opts)
                     break
                 end
             end
