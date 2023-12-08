@@ -4,16 +4,16 @@ local util = require('detour.util')
 
 local popup_to_covered_windows = {}
 local function construct_window_opts(coverable_windows, tab_id)
-    local window_ids = {}
+    local roots = {}
     for _, window_id in ipairs(vim.api.nvim_tabpage_list_wins(tab_id)) do
         if not util.is_floating(window_id) then
-            table.insert(window_ids, window_id)
+            table.insert(roots, window_id)
         end
     end
     --print("window_ids " .. vim.inspect(window_ids))
 
     local uncoverable_windows = {}
-    for _, window_id in ipairs(window_ids) do
+    for _, window_id in ipairs(roots) do
         if not util.contains_element(coverable_windows, window_id) then
             table.insert(uncoverable_windows, window_id)
         end
@@ -22,7 +22,7 @@ local function construct_window_opts(coverable_windows, tab_id)
     local horizontals = {}
     local verticals = {}
 
-    for _, window_id in ipairs(window_ids) do
+    for _, window_id in ipairs(roots) do
         local top, bottom, left, right = util.get_window_coordinates(window_id)
         horizontals[top] = 1
         horizontals[bottom] = 1
