@@ -1,18 +1,9 @@
 local detour = require("detour")
 local util = require("detour.util")
 
-local function switch_to_window(window_id)
-    local curr_win = vim.api.nvim_get_current_win()
-    while curr_win ~= window_id do
-        vim.cmd.wincmd('w')
-        curr_win = vim.api.nvim_get_current_win()
-    end
-end
-
-local function overlap(win_a, win_b)
-    local top_a, bottom_a, left_a, right_a = util.get_window_coordinates(win_a)
-    local top_b, bottom_b, left_b, right_b = util.get_window_coordinates(win_b)
-
+local function overlap(positions_a, positions_b)
+    local top_a, bottom_a, left_a, right_a = unpack(positions_a)
+    local top_b, bottom_b, left_b, right_b = unpack(positions_b)
     if math.max(left_a, left_b) >= math.min(right_a, right_b) then
         return false
     end
@@ -100,7 +91,7 @@ describe("detour", function ()
         local parent_popup = vim.api.nvim_get_current_win()
         detour.Detour()
 
-        switch_to_window(parent_popup)
+        vim.fn.win_gotoid(parent_popup)
         vim.cmd.quit() -- this should close both popups
         assert.same(vim.api.nvim_list_wins(), {win})
     end)
@@ -115,7 +106,7 @@ describe("detour", function ()
         detour.Detour()
         detour.Detour()
 
-        switch_to_window(win_b)
+        vim.fn.win_gotoid(win_b)
         vim.cmd.quit()
         assert.same(Set(vim.api.nvim_list_wins()), Set({win_a, popup_a}))
     end)
@@ -132,7 +123,7 @@ describe("detour", function ()
         local split_popup = vim.api.nvim_get_current_win()
 
         -- Go back to original window
-        switch_to_window(original_window)
+        vim.fn.win_gotoid(original_window)
 
         vim.cmd.quit()
 
@@ -148,13 +139,13 @@ describe("detour", function ()
         local coverable_window = vim.api.nvim_get_current_win()
         detour.Detour()
         local popup = vim.api.nvim_get_current_win()
-        switch_to_window(coverable_window)
+        vim.fn.win_gotoid(coverable_window)
         vim.cmd.wincmd('s')
         local uncoverable_win = vim.api.nvim_get_current_win()
-        switch_to_window(coverable_window)
+        vim.fn.win_gotoid(coverable_window)
         vim.cmd.close()
 
-        assert.False(overlap(popup, uncoverable_win))
+        assert.False(overlap({util.get_text_area_dimensions(popup)}, {util.get_text_area_dimensions(uncoverable_win)}))
     end)
 
     it("create popup over current window", function ()
@@ -163,39 +154,39 @@ describe("detour", function ()
         local window_b = vim.api.nvim_get_current_win()
         detour.DetourCurrentWindow()
         local popup_b = vim.api.nvim_get_current_win()
-        assert.False(overlap(window_a, popup_b))
-        assert.True(overlap(window_b, popup_b))
-        switch_to_window(window_a)
+        assert.False(overlap({util.get_text_area_dimensions(window_a)}, {util.get_text_area_dimensions(popup_b)}))
+        assert.True(overlap({util.get_text_area_dimensions(window_b)}, {util.get_text_area_dimensions(popup_b)}))
+        vim.fn.win_gotoid(window_a)
         detour.Detour()
         local popup_a = vim.api.nvim_get_current_win()
-        assert.True(overlap(window_a, popup_a))
-        assert.False(overlap(window_b, popup_a))
+        assert.True(overlap({util.get_text_area_dimensions(window_a)}, {util.get_text_area_dimensions(popup_a)}))
+        assert.False(overlap({util.get_text_area_dimensions(window_b)}, {util.get_text_area_dimensions(popup_a)}))
     end)
 
     it("Do not allow two popups over the same window", function ()
         local win = vim.api.nvim_get_current_win()
         detour.Detour()
         local popup = vim.api.nvim_get_current_win()
-        switch_to_window(win)
+        vim.fn.win_gotoid(win)
         detour.Detour()
         assert.same(Set({win, popup}), Set(vim.api.nvim_tabpage_list_wins(0)))
 
-        switch_to_window(win)
+        vim.fn.win_gotoid(win)
         detour.DetourCurrentWindow()
         assert.same(Set({win, popup}), Set(vim.api.nvim_tabpage_list_wins(0)))
     end)
 
-it("Do not allow two 'current window' popups over the same window", function ()
-    local win = vim.api.nvim_get_current_win()
-    detour.DetourCurrentWindow()
-    local popup = vim.api.nvim_get_current_win()
-    switch_to_window(win)
-    detour.DetourCurrentWindow()
-    assert.same(Set({win, popup}), Set(vim.api.nvim_tabpage_list_wins(0)))
+    it("Do not allow two 'current window' popups over the same window", function ()
+        local win = vim.api.nvim_get_current_win()
+        detour.DetourCurrentWindow()
+        local popup = vim.api.nvim_get_current_win()
+        vim.fn.win_gotoid(win)
+        detour.DetourCurrentWindow()
+        assert.same(Set({win, popup}), Set(vim.api.nvim_tabpage_list_wins(0)))
 
-    switch_to_window(win)
-    detour.Detour()
-    assert.same(Set({win, popup}), Set(vim.api.nvim_tabpage_list_wins(0)))
-end)
+        vim.fn.win_gotoid(win)
+        detour.Detour()
+        assert.same(Set({win, popup}), Set(vim.api.nvim_tabpage_list_wins(0)))
+    end)
 
 end)
