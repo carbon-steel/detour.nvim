@@ -57,6 +57,21 @@ describe("detour", function ()
         assert.same(#vim.api.nvim_list_wins(), 2)
     end)
 
+    it("create nested popup over non-Detour popup", function ()
+        local base_buffer = vim.api.nvim_get_current_buf()
+        local non_detour_popup = vim.api.nvim_open_win(
+            vim.api.nvim_win_get_buf(0),
+            true,
+            {relative='win', width=12, height=3, bufpos={100,10}}
+        )
+
+        -- TODO: correct this behavior.
+        assert.has.errors(detour.Detour)
+    end)
+    -- TODO: technically, either all test cases involving nested popups need to be tested with both
+    -- nested Detour popups and nested windows generally, or we need to both those objects behave
+    -- identically.
+    
     -- TODO: Make sure popups are fully contained within their parents
     it("create nested popup", function ()
         local base_buffer = vim.api.nvim_get_current_buf()
