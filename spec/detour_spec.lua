@@ -65,8 +65,27 @@ describe("detour", function ()
             {relative='win', width=12, height=3, bufpos={100,10}}
         )
 
-        -- TODO: correct this behavior.
-        assert.has.errors(detour.Detour)
+        local parent_popup = vim.api.nvim_get_current_win()
+        local parent_buffer = vim.api.nvim_get_current_buf()
+        assert.True(util.is_floating(parent_popup))
+        local parent_config = vim.api.nvim_win_get_config(parent_popup)
+
+        detour.Detour()
+        local child_popup = vim.api.nvim_get_current_win()
+        assert.True(util.is_floating(child_popup))
+        local child_config = vim.api.nvim_win_get_config(child_popup)
+        local child_buffer = vim.api.nvim_get_current_buf()
+        -- The nested popup should always be on top of the parent popup
+        assert.True(child_config.zindex > parent_config.zindex)
+
+        assert.same(#vim.api.nvim_list_wins(), 3)
+        assert.same(base_buffer, parent_buffer)
+        assert.same(parent_buffer, child_buffer)
+
+        vim.cmd.quit()
+        assert.same(#vim.api.nvim_list_wins(), 2)
+        vim.cmd.quit()
+        assert.same(#vim.api.nvim_list_wins(), 1)
     end)
     -- TODO: technically, either all test cases involving nested popups need to be tested with both
     -- nested Detour popups and nested windows generally, or we need to both those objects behave

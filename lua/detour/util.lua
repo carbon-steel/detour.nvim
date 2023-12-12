@@ -41,4 +41,9 @@ function M.is_floating(window_id)
     return vim.api.nvim_win_get_config(window_id).relative ~= ''
 end
 
+-- Returns the zindex for the given window, if floating, otherwise nil.
+function M.get_maybe_zindex(window_id)
+    return vim.api.nvim_win_get_config(window_id).zindex
+end
+
 return M

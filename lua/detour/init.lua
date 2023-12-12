@@ -167,13 +167,11 @@ local function construct_augroup_name(window_id)
     return "detour-"..window_id
 end
 
-local popup_to_layer = {}
 -- Needs to be idempotent
 local function teardownDetour(window_id)
     vim.api.nvim_del_augroup_by_name(construct_augroup_name(window_id))
     vim.api.nvim_win_close(window_id, false)
     popup_to_covered_windows[window_id] = nil
-    popup_to_layer[window_id] = nil
 end
 
 local function stringify(number)
@@ -209,9 +207,10 @@ local function nested_popup()
         return
     end
 
-    local window_opts = construct_nest(parent, popup_to_layer[parent] + 1)
+    local parent_zindex = util.get_maybe_zindex(parent) or 0
+    local window_opts = construct_nest(parent, parent_zindex + 1)
+
     local child = vim.api.nvim_open_win(vim.api.nvim_win_get_buf(0), true, window_opts)
-    popup_to_layer[child] =  popup_to_layer[parent] + 1
     popup_to_covered_windows[child] = { parent }
     local augroup_id = vim.api.nvim_create_augroup(construct_augroup_name(child), {})
     vim.api.nvim_create_autocmd({"User"}, {
@@ -277,7 +276,6 @@ local function popup(bufnr, coverable_windows)
         return
     end
     local popup_id = vim.api.nvim_open_win(bufnr, true, window_opts)
-    popup_to_layer[popup_id] = 1
     popup_to_covered_windows[popup_id] = coverable_windows
     local augroup_id = vim.api.nvim_create_augroup(construct_augroup_name(popup_id), {})
     vim.api.nvim_create_autocmd({"WinResized"}, {
