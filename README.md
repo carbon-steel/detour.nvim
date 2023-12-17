@@ -73,9 +73,42 @@ end)
 | **Open two terminal buffers -> Use the keymap above -> Select desired terminal** |
 | ![term](https://github.com/carbon-steel/detour.nvim/assets/7697639/775cd697-d47e-4d3c-9aaf-9f7f86c266f0) |
 
-### Wrap a TUI: tig
 
-Run `tig` in a popup
+### Wrap a TUI: top
+You can wrap any TUI in a popup. Here is an example.
+
+Run `top` in a popup:
+```lua
+vim.keymap.set("n", '<leader>p', function ()
+    require('detour').Detour()  -- open a detour popup
+    vim.cmd.terminal('top')     -- open a terminal buffer
+    vim.bo.bufhidden = 'delete' -- close the terminal when window closes
+
+    -- It's common for people to have `<Esc>` mapped to `<C-\><C-n>` for terminals.
+    -- This can get in the way when interacting with TUIs.
+    -- This maps the escape key back to itself (for this buffer) to fix this problem.
+    vim.keymap.set('t', '<Esc>', '<Esc>', { buffer = true })
+
+    vim.cmd.startinsert() -- go into insert mode
+
+    vim.api.nvim_create_autocmd({"TermClose"}, {
+        buffer = vim.api.nvim_get_current_buf(),
+        callback = function ()
+            -- This automated keypress skips for you the "[Process exited 0]" message
+            -- that the embedded terminal shows.
+            vim.api.nvim_feedkeys('i', 'n', false)
+        end
+    })
+end)
+```
+
+||
+| :--: |
+| **Use keymap above -> Close window** |
+![top](https://github.com/carbon-steel/detour.nvim/assets/7697639/49dd12ab-630b-4558-9486-fe82cc94882c)
+
+### Wrap a TUI: tig
+Run `tig` in a popup:
 ```lua
 vim.keymap.set('n', '<leader>g', function()
     local current_dir = vim.fn.expand("%:p:h")
@@ -110,38 +143,6 @@ end)
 |:--:|
 | **Use keymap above -> Close window** |
 | ![tig2](https://github.com/carbon-steel/detour.nvim/assets/7697639/7dd84b42-26d8-487b-8486-aa08e0fef5c8) |
-
-
-### Wrap a TUI: top
-```lua
--- Wrap any TUI inside a popup
-vim.keymap.set("n", '<leader>p', function ()
-    require('detour').Detour()  -- open a detour popup
-    vim.cmd.terminal('top')     -- open a terminal buffer
-    vim.bo.bufhidden = 'delete' -- close the terminal when window closes
-
-    -- It's common for people to have `<Esc>` mapped to `<C-\><C-n>` for terminals.
-    -- This can get in the way when interacting with TUIs.
-    -- This maps the escape key back to itself (for this buffer) to fix this problem.
-    vim.keymap.set('t', '<Esc>', '<Esc>', { buffer = true })
-
-    vim.cmd.startinsert() -- go into insert mode
-
-    vim.api.nvim_create_autocmd({"TermClose"}, {
-        buffer = vim.api.nvim_get_current_buf(),
-        callback = function ()
-            -- This automated keypress skips for you the "[Process exited 0]" message
-            -- that the embedded terminal shows.
-            vim.api.nvim_feedkeys('i', 'n', false)
-        end
-    })
-end)
-```
-
-||
-| :--: |
-| **Use keymap above -> Close window** |
-![top](https://github.com/carbon-steel/detour.nvim/assets/7697639/49dd12ab-630b-4558-9486-fe82cc94882c)
 
 # FAQ
 > I want to convert popups to splits or tabs.
