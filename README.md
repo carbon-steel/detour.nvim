@@ -60,8 +60,8 @@ vim.keymap.set('n', '<leader>t', function()
     -- write to this blank buffer instead of whatever buffer `Detour` opened
     -- with.
     vim.cmd.enew()
-    vim.bo.bufhidden = 'delete'
 
+    vim.bo.bufhidden = 'delete'                 -- close the terminal when window closes
     require('telescope.builtin').buffers({})    -- Open telescope prompt
     vim.api.nvim_feedkeys("term://", "n", true) -- popuplate prompt with "term"
 end)
@@ -78,9 +78,11 @@ Run `tig` in a popup
 vim.keymap.set('n', '<leader>g', function()
     local current_dir = vim.fn.expand("%:p:h")
     require('detour').Detour() -- open a detour popup
+
     -- Set this window's current working directory to current file's directory.
     -- tig finds a git repo based on the current working directory. 
     vim.cmd.lcd(current_dir)
+
     vim.cmd.terminal('tig')     -- open a terminal buffer running tig
     vim.bo.bufhidden = 'delete' -- close the terminal when window closes
 
@@ -90,6 +92,7 @@ vim.keymap.set('n', '<leader>g', function()
     vim.keymap.set('t', '<Esc>', '<Esc>', { buffer = true })
 
     vim.cmd.startinsert() -- go to insert mode
+
     vim.api.nvim_create_autocmd({"TermClose"}, {
         buffer = vim.api.nvim_get_current_buf(),
         callback = function ()
@@ -121,6 +124,7 @@ vim.keymap.set("n", '<leader>p', function ()
     vim.keymap.set('t', '<Esc>', '<Esc>', { buffer = true })
 
     vim.cmd.startinsert() -- go into insert mode
+
     vim.api.nvim_create_autocmd({"TermClose"}, {
         buffer = vim.api.nvim_get_current_buf(),
         callback = function ()
