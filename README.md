@@ -46,12 +46,10 @@ Provides the `:Detour` command *(and `require('detour').Detour()` in lua)* that 
 Here are some examples of what you can do...
 
 ### Use with Telescope
+Select a terminal buffer to open in a popup
 
+This is a simple example but there is a better keymap in `examples/telescope.md` that also opens a new terminal when no terminals are found.
 ```lua
--- A keymap for selecting a terminal buffer to open in a popup
---
--- This is a simple example but there is a better keymap in `examples/telescope.md` that
--- also opens a new terminal when no terminals are found.
 vim.keymap.set('n', '<leader>t', function()
     require('detour').Detour() -- Open a detour popup
 
@@ -64,7 +62,7 @@ vim.keymap.set('n', '<leader>t', function()
     vim.cmd.enew()
     vim.bo.bufhidden = 'delete'
 
-    require('telescope.builtin').buffers({}) -- Open telescope prompt
+    require('telescope.builtin').buffers({})    -- Open telescope prompt
     vim.api.nvim_feedkeys("term://", "n", true) -- popuplate prompt with "term"
 end)
 ```
@@ -75,15 +73,15 @@ end)
 
 ### Wrap a TUI: tig
 
+Run `tig` in a popup
 ```lua
--- A keymap for running tig in a popup
 vim.keymap.set('n', '<leader>g', function()
     local current_dir = vim.fn.expand("%:p:h")
     require('detour').Detour() -- open a detour popup
     -- Set this window's current working directory to current file's directory.
     -- tig finds a git repo based on the current working directory. 
     vim.cmd.lcd(current_dir)
-    vim.cmd.terminal('tig')          -- open a terminal buffer running tig
+    vim.cmd.terminal('tig')     -- open a terminal buffer running tig
     vim.bo.bufhidden = 'delete' -- close the terminal when window closes
 
     -- It's common for people to have `<Esc>` mapped to `<C-\><C-n>` for terminals.
@@ -122,11 +120,12 @@ vim.keymap.set("n", '<leader>p', function ()
     -- This maps the escape key back to itself (for this buffer) to fix this problem.
     vim.keymap.set('t', '<Esc>', '<Esc>', { buffer = true })
 
-    vim.cmd.startinsert()       -- go into insert mode
+    vim.cmd.startinsert() -- go into insert mode
     vim.api.nvim_create_autocmd({"TermClose"}, {
         buffer = vim.api.nvim_get_current_buf(),
         callback = function ()
--- This automated keypress skips for you the "[Process exited 0]" message that the embedded terminal shows.
+            -- This automated keypress skips for you the "[Process exited 0]" message
+            -- that the embedded terminal shows.
             vim.api.nvim_feedkeys('i', 'n', false)
         end
     })
