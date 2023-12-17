@@ -41,9 +41,11 @@ Provides the `:Detour` command *(and `require('detour').Detour()` in lua)* that 
 ```
 
 # Example keymaps
-`detour.nvim` is capable of more than just displaying file buffers. It generalizes the floating window behavior of plugins such as [`toggleterm.nvim`](https://github.com/akinsho/toggleterm.nvim) and [`lazygit.nvim`](https://github.com/kdheepak/lazygit.nvim). It is as flexible as (Neo)Vim's split window mechanism.
+`detour.nvim` is designed as a utility library for keymaps people can write on their own.
 
-Here are some examples of what you can do...
+**NOTE** If you'd like to share a keymap you made, please submit it in a github issue and we'll include it in the `examples` directory!
+
+Here are a few basic examples...
 
 ### Use with Telescope
 Select a terminal buffer to open in a popup
