@@ -2,7 +2,7 @@
 Here are examples of useful keymaps where you use detour popups together with the [telescope plugin](https://github.com/nvim-telescope/telescope.nvim).
 
 ### Terminal selection
-A keymap for opening a prompt to select a terminal buffer to open in a popup
+Select an existing terminal to open in a popup. If none exist, open a new one. 
 ```lua
 vim.keymap.set('n', '<leader>t', function()
     local terminal_buffer_found = false
