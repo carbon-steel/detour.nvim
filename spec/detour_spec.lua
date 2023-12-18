@@ -45,6 +45,7 @@ describe("detour", function ()
         end
     end)
 
+    -- See Issue #25 for a discussion of duplication in this test suite.
     it("create popup", function ()
         vim.cmd.view("/tmp/detour")
         local before_buffer = vim.api.nvim_get_current_buf()
@@ -66,8 +67,7 @@ describe("detour", function ()
             {relative='win', width=12, height=3, bufpos={100,10}}
         )
 
-        -- this is all copied from the test case below; see the note which follows this function for
-        -- a note regarding how these tests could be cleaned up.
+        -- See the note above regarding the duplication of this test code.
         local parent_popup = vim.api.nvim_get_current_win()
         local parent_buffer = vim.api.nvim_get_current_buf()
         assert.True(util.is_floating(parent_popup))
@@ -90,15 +90,6 @@ describe("detour", function ()
         vim.cmd.quit()
         assert.same(#vim.api.nvim_list_wins(), 1)
     end)
-    -- TODO: technically, either 
-    --   1) all test cases involving nested popups need to be tested with both
-    --      nested Detour popups and nested windows generally; or
-    --   2) we must ensure that detour.Detour() behaves identically when nesting over either of the
-    --      objects just mentioned.
-    -- Approach (2) is clearly superior, but it's not clear (to neilvyas) how to accomplish that;
-    -- as such, perhaps the better approach is to abstract all nesting-related coverage into a
-    -- function which accepts a "popup constructor" and produces test cases, then invoke this
-    -- function twice, once with a constructor for detour.Detour() and another for general popups.
     
     -- TODO: Make sure popups are fully contained within their parents
     it("create nested popup", function ()
