@@ -1,44 +1,50 @@
 local M = {}
 
 local util = require('detour.util')
+local MIN_POPUP_HEIGHT = 3 -- border (2) + text (1)
+local MIN_POPUP_WIDTH = 3 -- border (2) + text (1)
 
 local popup_to_covered_windows = {}
+
+local function is_statusline_global()
+    if vim.o.laststatus == 3 then
+        return false -- the statusline is global. No specific window has it.
+    end
+end
+
 local function construct_window_opts(coverable_windows, tab_id)
-    local window_ids = {}
+    local roots = {}
     for _, window_id in ipairs(vim.api.nvim_tabpage_list_wins(tab_id)) do
         if not util.is_floating(window_id) then
-            table.insert(window_ids, window_id)
+            table.insert(roots, window_id)
         end
     end
     --print("window_ids " .. vim.inspect(window_ids))
 
     local uncoverable_windows = {}
-    for _, window_id in ipairs(window_ids) do
-        if not util.contains_element(coverable_windows, window_id) then
-            table.insert(uncoverable_windows, window_id)
+    for _, root in ipairs(roots) do
+        if not util.contains_element(coverable_windows, root) then
+            table.insert(uncoverable_windows, root)
         end
     end
     --print("uncoverable_windows " .. vim.inspect(uncoverable_windows))
     local horizontals = {}
     local verticals = {}
 
-    for _, window_id in ipairs(window_ids) do
-        local top, bottom, left, right = util.get_window_coordinates(window_id)
+    for _, root in ipairs(roots) do
+        local top, bottom, left, right = util.get_text_area_dimensions(root)
         horizontals[top] = 1
         horizontals[bottom] = 1
         verticals[left] = 1
         verticals[right] = 1
     end
 
-    --print( "horizontals " .. vim.inspect(horizontals))
-    --print( "verticals " .. vim.inspect(verticals))
-
     local floors = {}
     local sides = {}
 
     for top, _ in pairs(horizontals) do
         for bottom, _ in pairs(horizontals) do
-            if top < bottom then
+            if top + MIN_POPUP_HEIGHT <= bottom then
                 table.insert(floors, {top, bottom})
             end
         end
@@ -46,14 +52,11 @@ local function construct_window_opts(coverable_windows, tab_id)
 
     for left, _ in pairs(verticals) do
         for right, _ in pairs(verticals) do
-            if left < right then
+            if left + MIN_POPUP_WIDTH <= right then
                 table.insert(sides, {left, right})
             end
         end
     end
-
-    --print( "floors " .. vim.inspect(floors))
-    --print( "sides " .. vim.inspect(sides))
 
     local max_area = 0
     local dimensions = nil
@@ -63,7 +66,14 @@ local function construct_window_opts(coverable_windows, tab_id)
             local left, right = unpack(curr_sides)
             local legal = true
             for _, uncoverable_window in ipairs(uncoverable_windows) do
-                local uncoverable_top, uncoverable_bottom, uncoverable_left, uncoverable_right = util.get_window_coordinates(uncoverable_window)
+                local uncoverable_top, uncoverable_bottom, uncoverable_left, uncoverable_right = util.get_text_area_dimensions(uncoverable_window)
+                if not is_statusline_global() then -- we have to worry about statuslines
+                    -- The fact that we're starting with text area dimensions means that all of the rectangles we are working with do not include statuslines.
+                    -- This means that we need to avoid inadvertantly covering a window's status line.
+                    -- Neovim can be configured to only show statuslines when there are multiple windows on the screen but we can ignore that because this loop only runs when there are multiple windows on the screen.
+                    uncoverable_top = uncoverable_top - 1 -- don't cover above window's statusline
+                    uncoverable_bottom = uncoverable_bottom + 1 -- don't cover this window's statusline
+                end
                 local lowest_top = math.max(top, uncoverable_top)
                 local highest_bottom = math.min(bottom, uncoverable_bottom)
                 local rightest_left = math.max(left, uncoverable_left)
@@ -91,15 +101,56 @@ local function construct_window_opts(coverable_windows, tab_id)
     end
 
     local top, bottom, left, right = unpack(dimensions)
-    local width = right - left - 1
-    local height = bottom - top - 1
-    if width > 20 then
-        width = width - 4
-        left = left + 2
+    local width = right - left
+    local height = bottom - top
+
+    if height < MIN_POPUP_HEIGHT then
+        vim.api.nvim_err_writeln("[detour.nvim] (please file a github issue!) height is supposed to be at least " .. MIN_POPUP_HEIGHT)
+        return nil
     end
-    if height > 14 then
-        height = height - 4
-        top = top + 2
+    if width < MIN_POPUP_WIDTH then
+        vim.api.nvim_err_writeln("[detour.nvim] (please file a github issue!) width is supposed to be at least .." .. MIN_POPUP_WIDTH)
+        return nil
+    end
+
+    -- If a window's height extends below the UI, the window's border gets cut off.
+    -- If a window's width extends beyond the UI, the window's border still shows up at the end of the UI.
+    -- Using a border adds 2 to the window's height and width.
+    local window_opts =  {
+        relative = "editor",
+        row = top,
+        col = left,
+        width = width - 2, -- create some space for borders
+        height = height - 2, -- create some space for borders
+        border = "rounded",
+        zindex = 1,
+    }
+
+    if window_opts.width > 40 then
+        window_opts.width = window_opts.width - 4
+        window_opts.col = window_opts.col + 2
+    end
+
+    if window_opts.height >= 7 then
+        window_opts.height = window_opts.height - 2
+        window_opts.row = window_opts.row + 1
+    end
+
+    return window_opts
+end
+
+local function construct_nest(parent, layer)
+    local top, bottom, left, right = util.get_text_area_dimensions(parent)
+    local width = right - left
+    local height = bottom - top
+    local border = "rounded"
+    if height >= 3 then
+        height = height - 2
+        top = top + 1
+    end
+    if width >= 3 then
+        width = width - 2
+        left = left + 1
     end
     return {
         relative = "editor",
@@ -107,22 +158,7 @@ local function construct_window_opts(coverable_windows, tab_id)
         col = left,
         width = width,
         height = height,
-        border = "rounded",
-        zindex = 1,
-    }
-end
-
-local function construct_nest(parent, layer)
-    local top, bottom, left, right = util.get_window_coordinates(parent)
-    local width = right - left - 2
-    local height = bottom - top - 2
-    return {
-        relative = "editor",
-        row = top + 1,
-        col = left + 1,
-        width = width,
-        height = height,
-        border = "rounded",
+        border = border,
         zindex = layer
     }
 end
@@ -131,13 +167,11 @@ local function construct_augroup_name(window_id)
     return "detour-"..window_id
 end
 
-local popup_to_layer = {}
 -- Needs to be idempotent
 local function teardownDetour(window_id)
     vim.api.nvim_del_augroup_by_name(construct_augroup_name(window_id))
     vim.api.nvim_win_close(window_id, false)
     popup_to_covered_windows[window_id] = nil
-    popup_to_layer[window_id] = nil
 end
 
 local function stringify(number)
@@ -159,8 +193,10 @@ local function is_available(window)
 end
 
 local function resize_popup(window_id, window_opts)
-    vim.api.nvim_win_set_config(window_id, window_opts)
-    vim.cmd.doautocmd("User PopupResized"..stringify(window_id))
+    if window_opts ~= nil then
+        vim.api.nvim_win_set_config(window_id, window_opts)
+        vim.cmd.doautocmd("User PopupResized"..stringify(window_id))
+    end
 end
 
 local function nested_popup()
@@ -171,9 +207,10 @@ local function nested_popup()
         return
     end
 
-    local window_opts = construct_nest(parent, popup_to_layer[parent] + 1)
+    local parent_zindex = util.get_maybe_zindex(parent) or 0
+    local window_opts = construct_nest(parent, parent_zindex + 1)
+
     local child = vim.api.nvim_open_win(vim.api.nvim_win_get_buf(0), true, window_opts)
-    popup_to_layer[child] =  popup_to_layer[parent] + 1
     popup_to_covered_windows[child] = { parent }
     local augroup_id = vim.api.nvim_create_augroup(construct_augroup_name(child), {})
     vim.api.nvim_create_autocmd({"User"}, {
@@ -235,8 +272,10 @@ local function popup(bufnr, coverable_windows)
     end
 
     local window_opts = construct_window_opts(coverable_windows, tab_id)
+    if window_opts == nil then
+        return
+    end
     local popup_id = vim.api.nvim_open_win(bufnr, true, window_opts)
-    popup_to_layer[popup_id] = 1
     popup_to_covered_windows[popup_id] = coverable_windows
     local augroup_id = vim.api.nvim_create_augroup(construct_augroup_name(popup_id), {})
     vim.api.nvim_create_autocmd({"WinResized"}, {

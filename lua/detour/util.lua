@@ -27,7 +27,10 @@ function M.contains_value(array, target)
     return false
 end
 
-function M.get_window_coordinates(window_id)
+-- Returns the positions of top, bottom, left, and right of a given window's text area.
+-- The statusline is not included in the text area.
+-- bottom and right are exclusive
+function M.get_text_area_dimensions(window_id)
     local top, left = unpack(vim.api.nvim_win_get_position(window_id))
     local bottom = top + vim.api.nvim_win_get_height(window_id)
     local right = left + vim.api.nvim_win_get_width(window_id)
@@ -36,6 +39,11 @@ end
 
 function M.is_floating(window_id)
     return vim.api.nvim_win_get_config(window_id).relative ~= ''
+end
+
+-- Returns the zindex for the given window, if floating, otherwise nil.
+function M.get_maybe_zindex(window_id)
+    return vim.api.nvim_win_get_config(window_id).zindex
 end
 
 return M
