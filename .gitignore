@@ -46,3 +46,6 @@ lua/.luarc.json
 /.luarocks
 
 .nvimlog
+
+# Temporary files for testing
+image
