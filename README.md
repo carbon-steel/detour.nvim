@@ -9,9 +9,10 @@ J.R.R. Tolkien, The Lord of the Rings
 ![detour](https://github.com/carbon-steel/detour.nvim/assets/7697639/63a88fd3-f910-4e42-9664-0e14fe88d066)
 
 # Never lose your spot!📍🗺️
-> What does detour.nvim do?
 
-Provides the `:Detour` command *(and `require('detour').Detour()` in lua)* that opens a popup window.
+| What does detour.nvim do? | |
+| :--: | :--: |
+| `:Detour`/`require('detour').Detour()` opens a popup window. | ![detour](https://github.com/carbon-steel/detour.nvim/assets/7697639/1eb85155-7134-473f-8df0-dd15f55c1d8c) |
 
 `detour.nvim` has two uses:
 * Use popup windows instead of split windows
