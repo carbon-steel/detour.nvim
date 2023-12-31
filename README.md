@@ -12,11 +12,11 @@ J.R.R. Tolkien, The Lord of the Rings
 
 | What does detour.nvim do? | |
 | :--: | :--: |
-| `:Detour`/`require('detour').Detour()` opens a popup window. | ![detour](https://github.com/carbon-steel/detour.nvim/assets/7697639/1eb85155-7134-473f-8df0-dd15f55c1d8c) |
-| `:DetourCurrentWindow`/`require('detour').DetourCurrentWindow()` | ![detour2](https://github.com/carbon-steel/detour.nvim/assets/7697639/d3f0db15-916b-4b17-b227-0e4aa8fc318d) |
+| `:Detour`/`require('detour').Detour()` <br />opens a popup window. | ![detour](https://github.com/carbon-steel/detour.nvim/assets/7697639/1eb85155-7134-473f-8df0-dd15f55c1d8c) |
+| `:DetourCurrentWindow`/<br />`require('detour').DetourCurrentWindow()` | ![detour2](https://github.com/carbon-steel/detour.nvim/assets/7697639/d3f0db15-916b-4b17-b227-0e4aa8fc318d) |
 | Works with Neovim's `:split`/`:vsplit`/`<C-w>s`/`<C-w>v`/`<C-w>T` commands | ![split](https://github.com/carbon-steel/detour.nvim/assets/7697639/4ffa7f36-8b2a-4d91-a8bb-7012f7b82015) |
 | You can nest detour popups | ![nest](https://github.com/carbon-steel/detour.nvim/assets/7697639/5fc3cad6-9acf-482d-97cb-c75788617cf8) |
-| Example usage: Open a popup -> Go to different file -> Create vertical split -> Close popup | ![basic](https://github.com/carbon-steel/detour.nvim/assets/7697639/3a408a14-8b9d-4bd4-90db-e633c5f97b7c) |
+| Example usage: Open a popup <br />-> Go to different file <br />-> Create vertical split <br />-> Close popup | ![basic](https://github.com/carbon-steel/detour.nvim/assets/7697639/3a408a14-8b9d-4bd4-90db-e633c5f97b7c) |
 
 `detour.nvim` has two uses:
 * Use popup windows instead of split windows
