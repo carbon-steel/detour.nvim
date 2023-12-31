@@ -1,3 +1,16 @@
 local detour = require('detour')
 vim.api.nvim_create_user_command("Detour", detour.Detour, {})
 vim.api.nvim_create_user_command("DetourCurrentWindow", detour.DetourCurrentWindow, {})
+vim.api.nvim_create_user_command("DetourWinCmdL", detour.DetourWinCmdL, {})
+
+--TODO: REMOVE
+vim.keymap.set('n', '<c-w>h', detour.DetourWinCmdH)
+vim.keymap.set('n', '<c-h>', detour.DetourWinCmdH)
+vim.keymap.set('n', '<c-w>j', detour.DetourWinCmdJ)
+vim.keymap.set('n', '<c-j>', detour.DetourWinCmdJ)
+vim.keymap.set('n', '<c-w>k', detour.DetourWinCmdK)
+vim.keymap.set('n', '<c-k>', detour.DetourWinCmdK)
+vim.keymap.set('n', '<c-w>l', detour.DetourWinCmdL)
+vim.keymap.set('n', '<c-l>', detour.DetourWinCmdL)
+vim.keymap.set('n', '<c-w><c-w>', detour.DetourWinCmdW)
+vim.keymap.set('n', '<c-w>w', detour.DetourWinCmdW)

@@ -6,6 +6,111 @@ local MIN_POPUP_WIDTH = 3 -- border (2) + text (1)
 
 local popup_to_covered_windows = {}
 
+-- Finds all base windows that are covered by the provided popup.
+-- If the provided window is not a popup, returns the given argument.
+local function find_covered_bases(window_id)
+    local covered_bases = nil
+    while vim.tbl_get(popup_to_covered_windows, window_id) do
+        if #popup_to_covered_windows[window_id] > 1 then
+            covered_bases = popup_to_covered_windows[window_id]
+            break
+        elseif #popup_to_covered_windows[window_id] == 0 then
+            assert(false, "[detour.nvim] There should never be an empty array in popup_to_covered_windows.")
+        end
+        window_id = popup_to_covered_windows[window_id][1]
+    end
+    if covered_bases == nil then
+        covered_bases = {window_id}
+    end
+
+    return vim.tbl_filter(function (base)
+        return util.overlap({util.get_text_area_dimensions(base)}, {util.get_text_area_dimensions(window_id)})
+    end, covered_bases)
+end
+
+local function find_top_popup()
+    local window_id = vim.api.nvim_get_current_win()
+    while true do
+        local start = window_id
+        for popup, _ in pairs(popup_to_covered_windows) do
+            if vim.tbl_contains(find_covered_bases(popup), window_id) then
+                window_id = popup
+                break
+            end
+        end
+        if start == window_id then
+            return window_id
+        end
+    end
+end
+
+local function wincmd_l()
+    local covered_bases = find_covered_bases(vim.api.nvim_get_current_win())
+    local rightest_base = covered_bases[1]
+    for _, covered_base in ipairs(covered_bases) do
+        local _, _, _, right_a = util.get_text_area_dimensions(covered_base)
+        local _, _, _, right_b = util.get_text_area_dimensions(rightest_base)
+        if right_a > right_b then
+            rightest_base = covered_base
+        end
+    end
+    vim.fn.win_gotoid(rightest_base)
+    vim.cmd.wincmd('l')
+    vim.fn.win_gotoid(find_top_popup())
+end
+
+local function wincmd_h()
+    local covered_bases = find_covered_bases(vim.api.nvim_get_current_win())
+    local leftest_base = covered_bases[1]
+    for _, covered_base in ipairs(covered_bases) do
+        local _, _, left_a, _ = util.get_text_area_dimensions(covered_base)
+        local _, _, left_b, _ = util.get_text_area_dimensions(leftest_base)
+        if left_a < left_b then
+            leftest_base = covered_base
+        end
+    end
+    vim.fn.win_gotoid(leftest_base)
+    vim.cmd.wincmd('h')
+    vim.fn.win_gotoid(find_top_popup())
+end
+
+local function wincmd_j()
+    local covered_bases = find_covered_bases(vim.api.nvim_get_current_win())
+    local bottom_base = covered_bases[1]
+    for _, covered_base in ipairs(covered_bases) do
+        local _, bottom_a, _, _ = util.get_text_area_dimensions(covered_base)
+        local _, bottom_b, _, _ = util.get_text_area_dimensions(bottom_base)
+        if bottom_a > bottom_b then
+            bottom_base = covered_base
+        end
+    end
+    vim.fn.win_gotoid(bottom_base)
+    vim.cmd.wincmd('j')
+    vim.fn.win_gotoid(find_top_popup())
+end
+
+local function wincmd_k()
+    local covered_bases = find_covered_bases(vim.api.nvim_get_current_win())
+    local top_base = covered_bases[1]
+    for _, covered_base in ipairs(covered_bases) do
+        local top_a, _, _, _ = util.get_text_area_dimensions(covered_base)
+        local top_b, _, _, _ = util.get_text_area_dimensions(top_base)
+        if top_a < top_b then
+            top_base = covered_base
+        end
+    end
+    vim.fn.win_gotoid(top_base)
+    vim.cmd.wincmd('k')
+    vim.fn.win_gotoid(find_top_popup())
+end
+
+local function wincmd_w()
+    vim.cmd.wincmd('w')
+    while vim.api.nvim_get_current_win() ~= find_top_popup() do
+        -- TODO: add in a mechanism to prevent infinite loop
+        vim.cmd.wincmd('w')
+    end
+end
 local function is_statusline_global()
     if vim.o.laststatus == 3 then
         return false -- the statusline is global. No specific window has it.
@@ -328,5 +433,11 @@ end
 M.DetourCurrentWindow = function ()
     popup(vim.api.nvim_get_current_buf(), {vim.api.nvim_get_current_win()})
 end
+
+M.DetourWinCmdH = wincmd_h
+M.DetourWinCmdJ = wincmd_j
+M.DetourWinCmdK = wincmd_k
+M.DetourWinCmdL = wincmd_l
+M.DetourWinCmdW = wincmd_w
 
 return M
