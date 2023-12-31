@@ -1,10 +1,80 @@
 local M = {}
 
 local util = require('detour.util')
+require('detour.plugin_autocmds')
 local MIN_POPUP_HEIGHT = 3 -- border (2) + text (1)
 local MIN_POPUP_WIDTH = 3 -- border (2) + text (1)
 
-local popup_to_covered_windows = {}
+local popup_to_covered_windows = require('detour.internal').popup_to_covered_windows
+local find_covered_bases = require('detour.internal').find_covered_bases
+
+local function wincmd_l()
+    local covered_bases = find_covered_bases(vim.api.nvim_get_current_win())
+    local rightest_base = covered_bases[1]
+    for _, covered_base in ipairs(covered_bases) do
+        local _, _, _, right_a = util.get_text_area_dimensions(covered_base)
+        local _, _, _, right_b = util.get_text_area_dimensions(rightest_base)
+        if right_a > right_b then
+            rightest_base = covered_base
+        end
+    end
+    vim.cmd('noautocmd call win_gotoid(' .. rightest_base .. ')')
+    vim.cmd.wincmd('l')
+    vim.api.nvim_exec_autocmds("User", { pattern = "WinEnter" }) -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
+end
+
+local function wincmd_h()
+    local covered_bases = find_covered_bases(vim.api.nvim_get_current_win())
+    local leftest_base = covered_bases[1]
+    for _, covered_base in ipairs(covered_bases) do
+        local _, _, left_a, _ = util.get_text_area_dimensions(covered_base)
+        local _, _, left_b, _ = util.get_text_area_dimensions(leftest_base)
+        if left_a < left_b then
+            leftest_base = covered_base
+        end
+    end
+    vim.cmd('noautocmd call win_gotoid(' .. leftest_base .. ')')
+    vim.cmd.wincmd('h')
+    vim.cmd.doautocmd("User WinEnter") -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
+end
+
+local function wincmd_j()
+    local covered_bases = find_covered_bases(vim.api.nvim_get_current_win())
+    local bottom_base = covered_bases[1]
+    for _, covered_base in ipairs(covered_bases) do
+        local _, bottom_a, _, _ = util.get_text_area_dimensions(covered_base)
+        local _, bottom_b, _, _ = util.get_text_area_dimensions(bottom_base)
+        if bottom_a > bottom_b then
+            bottom_base = covered_base
+        end
+    end
+    vim.cmd('noautocmd call win_gotoid(' .. bottom_base .. ')')
+    vim.cmd.wincmd('j')
+    vim.cmd.doautocmd("User WinEnter") -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
+end
+
+local function wincmd_k()
+    local covered_bases = find_covered_bases(vim.api.nvim_get_current_win())
+    local top_base = covered_bases[1]
+    for _, covered_base in ipairs(covered_bases) do
+        local top_a, _, _, _ = util.get_text_area_dimensions(covered_base)
+        local top_b, _, _, _ = util.get_text_area_dimensions(top_base)
+        if top_a < top_b then
+            top_base = covered_base
+        end
+    end
+    vim.cmd('noautocmd call win_gotoid(' .. top_base .. ')')
+    vim.cmd.wincmd('k')
+    vim.cmd.doautocmd("User WinEnter") -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
+end
+
+local function wincmd_w()
+    vim.cmd('noautocmd wincmd w')
+    while vim.api.nvim_get_current_win() ~= util.find_top_popup() do
+        -- TODO: add in a mechanism to prevent infinite loop
+        vim.cmd('noautocmd wincmd w')
+    end
+end
 
 local function is_statusline_global()
     if vim.o.laststatus == 3 then
@@ -367,5 +437,11 @@ end
 M.DetourCurrentWindow = function ()
     return popup(vim.api.nvim_get_current_buf(), {vim.api.nvim_get_current_win()})
 end
+
+M.DetourWinCmdH = wincmd_h
+M.DetourWinCmdJ = wincmd_j
+M.DetourWinCmdK = wincmd_k
+M.DetourWinCmdL = wincmd_l
+M.DetourWinCmdW = wincmd_w
 
 return M
