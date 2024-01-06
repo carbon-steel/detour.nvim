@@ -201,6 +201,7 @@ end
 
 local function nested_popup()
     local parent = vim.api.nvim_get_current_win()
+    local tab_id = vim.api.nvim_get_current_tabpage()
 
     if not is_available(parent) then
         vim.api.nvim_err_writeln("[detour.nvim] This popup already has a child nested inside it:" .. parent)
@@ -226,6 +227,9 @@ local function nested_popup()
         pattern = "" .. child,
         callback = function ()
             teardownDetour(child)
+            if vim.tbl_contains(vim.api.nvim_tabpage_list_wins(tab_id), parent) then
+                vim.fn.win_gotoid(parent)
+            end
         end
     })
 
@@ -295,6 +299,12 @@ local function popup(bufnr, coverable_windows)
         pattern = "" .. popup_id,
         callback = function ()
             teardownDetour(popup_id)
+            for _, base in ipairs(coverable_windows) do
+                if vim.tbl_contains(vim.api.nvim_tabpage_list_wins(tab_id), base) then
+                    vim.fn.win_gotoid(base)
+                    return
+                end
+            end
         end
     })
 

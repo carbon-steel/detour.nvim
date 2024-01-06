@@ -223,4 +223,18 @@ describe("detour", function ()
         assert.same(Set({win, popup}), Set(vim.api.nvim_tabpage_list_wins(0)))
     end)
 
+    it("Switch focus to a popup's parent when it's closed", function ()
+        local wins = {}
+        for _=1,10 do
+            table.insert(wins, vim.api.nvim_get_current_win())
+            detour.Detour()
+        end
+
+        for _=1, 10 do
+            vim.cmd.close()
+            assert.same(vim.api.nvim_get_current_win(), wins[#wins])
+            table.remove(wins, #wins)
+        end
+    end)
+
 end)
