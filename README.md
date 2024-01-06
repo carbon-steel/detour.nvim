@@ -62,8 +62,8 @@ vim.keymap.set('n', '<leader>t', function()
     -- write to this blank buffer instead of whatever buffer `Detour` opened
     -- with.
     vim.cmd.enew()
+    vim.bo.bufhidden = 'delete' -- delete this scratch buffer when we move out of it
 
-    vim.bo.bufhidden = 'delete'                 -- close the terminal when window closes
     require('telescope.builtin').buffers({})    -- Open telescope prompt
     vim.api.nvim_feedkeys("term://", "n", true) -- popuplate prompt with "term"
 end)
