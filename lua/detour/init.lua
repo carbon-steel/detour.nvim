@@ -205,7 +205,7 @@ local function nested_popup()
 
     if not is_available(parent) then
         vim.api.nvim_err_writeln("[detour.nvim] This popup already has a child nested inside it:" .. parent)
-        return
+        return false
     end
 
     local parent_zindex = util.get_maybe_zindex(parent) or 0
@@ -240,13 +240,13 @@ local function nested_popup()
             vim.cmd.doautocmd("WinClosed "..child)
         end
     })
+    return true
 end
 
 local function popup(bufnr, coverable_windows)
     local parent = vim.api.nvim_get_current_win()
     if util.is_floating(parent) then
-        nested_popup()
-        return
+        return nested_popup()
     end
     local tab_id = vim.api.nvim_get_current_tabpage()
     if coverable_windows == nil then
@@ -260,24 +260,24 @@ local function popup(bufnr, coverable_windows)
 
     if #coverable_windows == 0 then
         vim.api.nvim_err_writeln("[detour.nvim] No windows provided in coverable_windows.")
-        return
+        return false
     end
 
     for _, window in ipairs(coverable_windows) do
         if util.is_floating(window) then
             vim.api.nvim_err_writeln("[detour.nvim] No floating windows allowed in base (ie, non-nested) popup" .. window)
-            return
+            return false
         end
 
         if not is_available(window) then
             vim.api.nvim_err_writeln("[detour.nvim] This window is already reserved by another popup:" .. window)
-            return
+            return false
         end
     end
 
     local window_opts = construct_window_opts(coverable_windows, tab_id)
     if window_opts == nil then
-        return
+        return false
     end
     local popup_id = vim.api.nvim_open_win(bufnr, true, window_opts)
     popup_to_covered_windows[popup_id] = coverable_windows
@@ -329,14 +329,15 @@ local function popup(bufnr, coverable_windows)
             end
         })
     end
+    return true
 end
 
 M.Detour = function ()
-    popup(vim.api.nvim_get_current_buf())
+    return popup(vim.api.nvim_get_current_buf())
 end
 
 M.DetourCurrentWindow = function ()
-    popup(vim.api.nvim_get_current_buf(), {vim.api.nvim_get_current_win()})
+    return popup(vim.api.nvim_get_current_buf(), {vim.api.nvim_get_current_win()})
 end
 
 return M
