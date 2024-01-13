@@ -46,4 +46,22 @@ function M.get_maybe_zindex(window_id)
     return vim.api.nvim_win_get_config(window_id).zindex
 end
 
+local function overlap_helper(positions_a, positions_b)
+    local top_a, bottom_a, left_a, right_a = unpack(positions_a)
+    local top_b, bottom_b, left_b, right_b = unpack(positions_b)
+    if math.max(left_a, left_b) >= math.min(right_a, right_b) then
+        return false
+    end
+
+    if math.max(top_a, top_b) >= math.min(bottom_a, bottom_b) then
+        return false
+    end
+
+    return true
+end
+
+function M.overlap(window_a, window_b)
+    return overlap_helper({M.get_text_area_dimensions(window_a)}, {M.get_text_area_dimensions(window_b)})
+end
+
 return M

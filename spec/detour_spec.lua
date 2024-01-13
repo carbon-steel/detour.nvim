@@ -1,20 +1,6 @@
 local detour = require("detour")
 local util = require("detour.util")
 
-local function overlap(positions_a, positions_b)
-    local top_a, bottom_a, left_a, right_a = unpack(positions_a)
-    local top_b, bottom_b, left_b, right_b = unpack(positions_b)
-    if math.max(left_a, left_b) >= math.min(right_a, right_b) then
-        return false
-    end
-
-    if math.max(top_a, top_b) >= math.min(bottom_a, bottom_b) then
-        return false
-    end
-
-    return true
-end
-
 function Set (list)
     local set = {}
     for _, l in ipairs(list) do set[l] = true end
@@ -179,7 +165,7 @@ describe("detour", function ()
         vim.fn.win_gotoid(coverable_window)
         vim.cmd.close()
 
-        assert.False(overlap({util.get_text_area_dimensions(popup)}, {util.get_text_area_dimensions(uncoverable_win)}))
+        assert.False(util.overlap(popup, uncoverable_win))
     end)
 
     it("create popup over current window", function ()
@@ -188,13 +174,13 @@ describe("detour", function ()
         local window_b = vim.api.nvim_get_current_win()
         assert.True(detour.DetourCurrentWindow())
         local popup_b = vim.api.nvim_get_current_win()
-        assert.False(overlap({util.get_text_area_dimensions(window_a)}, {util.get_text_area_dimensions(popup_b)}))
-        assert.True(overlap({util.get_text_area_dimensions(window_b)}, {util.get_text_area_dimensions(popup_b)}))
+        assert.False(util.overlap(window_a, popup_b))
+        assert.True(util.overlap(window_b, popup_b))
         vim.fn.win_gotoid(window_a)
         assert.True(detour.Detour())
         local popup_a = vim.api.nvim_get_current_win()
-        assert.True(overlap({util.get_text_area_dimensions(window_a)}, {util.get_text_area_dimensions(popup_a)}))
-        assert.False(overlap({util.get_text_area_dimensions(window_b)}, {util.get_text_area_dimensions(popup_a)}))
+        assert.True(util.overlap(window_a, popup_a))
+        assert.False(util.overlap(window_b, popup_a))
     end)
 
     it("Do not allow two popups over the same window", function ()
