@@ -170,7 +170,6 @@ end
 -- Needs to be idempotent
 local function teardownDetour(window_id)
     vim.api.nvim_del_augroup_by_name(construct_augroup_name(window_id))
-    vim.api.nvim_win_close(window_id, false)
     popup_to_covered_windows[window_id] = nil
 end
 
@@ -237,8 +236,10 @@ local function nested_popup()
         group = augroup_id,
         pattern = "" .. parent,
         callback = function ()
-            vim.cmd.doautocmd("WinClosed "..child)
-        end
+            vim.api.nvim_win_close(child, false)
+            -- Even if `nested` is set to true, WinClosed does not trigger itself.
+            vim.cmd.doautocmd("WinClosed ".. child)
+        end,
     })
     return true
 end
@@ -322,11 +323,11 @@ local function popup(bufnr, coverable_windows)
                 end
 
                 if all_closed then
-                    --print("tearing down")
-                    teardownDetour(popup_id)
+                    vim.api.nvim_win_close(popup_id, false)
+                    -- Even if `nested` is set to true, WinClosed does not trigger itself.
                     vim.cmd.doautocmd("WinClosed ".. popup_id)
                 end
-            end
+            end,
         })
     end
     return true
