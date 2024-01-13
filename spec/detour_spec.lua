@@ -210,16 +210,26 @@ describe("detour", function ()
     end)
 
     it("Switch focus to a popup's parent when it's closed", function ()
-        local wins = {}
+        local wins = {vim.api.nvim_get_current_win()}
         for _=1,10 do
-            table.insert(wins, vim.api.nvim_get_current_win())
             assert.True(detour.Detour())
+            table.insert(wins, vim.api.nvim_get_current_win())
+            for j, win in ipairs(wins) do
+                if j > 1 then -- the base window cannot be unfocusable
+                    assert.same(vim.api.nvim_win_get_config(win).focusable, j == #wins)
+                end
+            end
         end
 
         for _=1, 10 do
             vim.cmd.close()
-            assert.same(vim.api.nvim_get_current_win(), wins[#wins])
             table.remove(wins, #wins)
+            assert.same(vim.api.nvim_get_current_win(), wins[#wins])
+            for j, win in ipairs(wins) do
+                if j > 1 then -- the base window cannot be unfocusable
+                    assert.same(vim.api.nvim_win_get_config(win).focusable, j == #wins)
+                end
+            end
         end
     end)
 

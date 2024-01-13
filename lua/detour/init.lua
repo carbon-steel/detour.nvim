@@ -170,6 +170,15 @@ end
 -- Needs to be idempotent
 local function teardownDetour(window_id)
     vim.api.nvim_del_augroup_by_name(construct_augroup_name(window_id))
+    for _, covered_window in ipairs(popup_to_covered_windows[window_id]) do
+        if vim.tbl_contains(vim.api.nvim_list_wins(), covered_window) and util.is_floating(covered_window) then
+            vim.api.nvim_win_set_config(
+                covered_window,
+                vim.tbl_extend("force",
+                               vim.api.nvim_win_get_config(covered_window),
+                               { focusable = true }))
+        end
+    end
     popup_to_covered_windows[window_id] = nil
 end
 
@@ -194,6 +203,18 @@ end
 local function resize_popup(window_id, window_opts)
     if window_opts ~= nil then
         vim.api.nvim_win_set_config(window_id, window_opts)
+
+        for _, covered_window in ipairs(popup_to_covered_windows[window_id]) do
+            if vim.tbl_contains(vim.api.nvim_list_wins(), covered_window) and util.is_floating(covered_window) then
+                vim.api.nvim_win_set_config(
+                    covered_window,
+                    vim.tbl_extend("force",
+                                   vim.api.nvim_win_get_config(covered_window),
+                                   { focusable = not util.overlap(covered_window, window_id) }))
+            end
+        end
+
+        -- Fully complete resizing before propogating event.
         vim.cmd.doautocmd("User PopupResized"..stringify(window_id))
     end
 end
