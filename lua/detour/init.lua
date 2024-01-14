@@ -241,6 +241,9 @@ local function nested_popup()
             vim.cmd.doautocmd("WinClosed ".. child)
         end,
     })
+    -- We're running this to make sure initializing popups runs the same code path as updating popups
+    -- We make sure to do this after all state and autocmds are set.
+    resize_popup(child, window_opts)
     return true
 end
 
@@ -330,6 +333,9 @@ local function popup(bufnr, coverable_windows)
             end,
         })
     end
+    -- We're running this to make sure initializing popups runs the same code path as updating popups
+    -- We make sure to do this after all state and autocmds are set.
+    resize_popup(popup_id, window_opts)
     return true
 end
 
