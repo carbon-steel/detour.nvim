@@ -1,20 +1,6 @@
 local detour = require("detour")
 local util = require("detour.util")
 
-local function overlap(positions_a, positions_b)
-    local top_a, bottom_a, left_a, right_a = unpack(positions_a)
-    local top_b, bottom_b, left_b, right_b = unpack(positions_b)
-    if math.max(left_a, left_b) >= math.min(right_a, right_b) then
-        return false
-    end
-
-    if math.max(top_a, top_b) >= math.min(bottom_a, bottom_b) then
-        return false
-    end
-
-    return true
-end
-
 function Set (list)
     local set = {}
     for _, l in ipairs(list) do set[l] = true end
@@ -50,7 +36,7 @@ describe("detour", function ()
         vim.cmd.view("/tmp/detour")
         local before_buffer = vim.api.nvim_get_current_buf()
         local before_window = vim.api.nvim_get_current_win()
-        detour.Detour()
+        assert.True(detour.Detour())
         local after_buffer = vim.api.nvim_get_current_buf()
         local after_window = vim.api.nvim_get_current_win()
         assert.are_not.same(before_window, after_window)
@@ -61,7 +47,7 @@ describe("detour", function ()
 
     it("create nested popup over non-Detour popup", function ()
         local base_buffer = vim.api.nvim_get_current_buf()
-        local non_detour_popup = vim.api.nvim_open_win(
+        vim.api.nvim_open_win(
             vim.api.nvim_win_get_buf(0),
             true,
             {relative='win', width=12, height=3, bufpos={100,10}}
@@ -73,7 +59,7 @@ describe("detour", function ()
         assert.True(util.is_floating(parent_popup))
         local parent_config = vim.api.nvim_win_get_config(parent_popup)
 
-        detour.Detour()
+        assert.True(detour.Detour())
         local child_popup = vim.api.nvim_get_current_win()
         assert.True(util.is_floating(child_popup))
         local child_config = vim.api.nvim_win_get_config(child_popup)
@@ -90,18 +76,18 @@ describe("detour", function ()
         vim.cmd.quit()
         assert.same(#vim.api.nvim_list_wins(), 1)
     end)
-    
+
     -- TODO: Make sure popups are fully contained within their parents
     it("create nested popup", function ()
         local base_buffer = vim.api.nvim_get_current_buf()
 
-        detour.Detour()
+        assert.True(detour.Detour())
         local parent_popup = vim.api.nvim_get_current_win()
         local parent_buffer = vim.api.nvim_get_current_buf()
         assert.True(util.is_floating(parent_popup))
         local parent_config = vim.api.nvim_win_get_config(parent_popup)
 
-        detour.Detour()
+        assert.True(detour.Detour())
         local child_popup = vim.api.nvim_get_current_win()
         assert.True(util.is_floating(child_popup))
         local child_config = vim.api.nvim_win_get_config(child_popup)
@@ -121,9 +107,9 @@ describe("detour", function ()
 
     it("closing parent popup closes child popup", function ()
         local win = vim.api.nvim_get_current_win()
-        detour.Detour()
+        assert.True(detour.Detour())
         local parent_popup = vim.api.nvim_get_current_win()
-        detour.Detour()
+        assert.True(detour.Detour())
 
         vim.fn.win_gotoid(parent_popup)
         vim.cmd.quit() -- this should close both popups
@@ -132,13 +118,13 @@ describe("detour", function ()
 
     it("closing base window closes all of its nested popups", function ()
         local win_a = vim.api.nvim_get_current_win()
-        detour.Detour()
+        assert.True(detour.Detour())
         local popup_a = vim.api.nvim_get_current_win()
         vim.cmd.split()
         local win_b = vim.api.nvim_get_current_win()
-        detour.Detour()
-        detour.Detour()
-        detour.Detour()
+        assert.True(detour.Detour())
+        assert.True(detour.Detour())
+        assert.True(detour.Detour())
 
         vim.fn.win_gotoid(win_b)
         vim.cmd.quit()
@@ -148,12 +134,12 @@ describe("detour", function ()
     it("closing base window closes popups", function ()
         vim.cmd.tabe()
         local original_window = vim.api.nvim_get_current_win()
-        detour.Detour()
-        detour.Detour()
+        assert.True(detour.Detour())
+        assert.True(detour.Detour())
 
         vim.cmd.wincmd('s') -- split to create a new uncovered window
         local split_window = vim.api.nvim_get_current_win()
-        detour.Detour()
+        assert.True(detour.Detour())
         local split_popup = vim.api.nvim_get_current_win()
 
         -- Go back to original window
@@ -171,7 +157,7 @@ describe("detour", function ()
         pending("WinResized doesn't seem to work when running nvim as a command.")
         vim.cmd.wincmd('v')
         local coverable_window = vim.api.nvim_get_current_win()
-        detour.Detour()
+        assert.True(detour.Detour())
         local popup = vim.api.nvim_get_current_win()
         vim.fn.win_gotoid(coverable_window)
         vim.cmd.wincmd('s')
@@ -179,61 +165,97 @@ describe("detour", function ()
         vim.fn.win_gotoid(coverable_window)
         vim.cmd.close()
 
-        assert.False(overlap({util.get_text_area_dimensions(popup)}, {util.get_text_area_dimensions(uncoverable_win)}))
+        assert.False(util.overlap(popup, uncoverable_win))
     end)
 
     it("create popup over current window", function ()
         local window_a = vim.api.nvim_get_current_win()
         vim.cmd.wincmd('s')
         local window_b = vim.api.nvim_get_current_win()
-        detour.DetourCurrentWindow()
+        assert.True(detour.DetourCurrentWindow())
         local popup_b = vim.api.nvim_get_current_win()
-        assert.False(overlap({util.get_text_area_dimensions(window_a)}, {util.get_text_area_dimensions(popup_b)}))
-        assert.True(overlap({util.get_text_area_dimensions(window_b)}, {util.get_text_area_dimensions(popup_b)}))
+        assert.False(util.overlap(window_a, popup_b))
+        assert.True(util.overlap(window_b, popup_b))
         vim.fn.win_gotoid(window_a)
-        detour.Detour()
+        assert.True(detour.Detour())
         local popup_a = vim.api.nvim_get_current_win()
-        assert.True(overlap({util.get_text_area_dimensions(window_a)}, {util.get_text_area_dimensions(popup_a)}))
-        assert.False(overlap({util.get_text_area_dimensions(window_b)}, {util.get_text_area_dimensions(popup_a)}))
+        assert.True(util.overlap(window_a, popup_a))
+        assert.False(util.overlap(window_b, popup_a))
     end)
 
     it("Do not allow two popups over the same window", function ()
         local win = vim.api.nvim_get_current_win()
-        detour.Detour()
+        assert.True(detour.Detour())
         local popup = vim.api.nvim_get_current_win()
         vim.fn.win_gotoid(win)
-        detour.Detour()
+        assert.False(detour.Detour())
         assert.same(Set({win, popup}), Set(vim.api.nvim_tabpage_list_wins(0)))
 
         vim.fn.win_gotoid(win)
-        detour.DetourCurrentWindow()
+        assert.False(detour.DetourCurrentWindow())
         assert.same(Set({win, popup}), Set(vim.api.nvim_tabpage_list_wins(0)))
     end)
 
     it("Do not allow two 'current window' popups over the same window", function ()
         local win = vim.api.nvim_get_current_win()
-        detour.DetourCurrentWindow()
+        assert.True(detour.DetourCurrentWindow())
         local popup = vim.api.nvim_get_current_win()
         vim.fn.win_gotoid(win)
-        detour.DetourCurrentWindow()
+        assert.False(detour.DetourCurrentWindow())
         assert.same(Set({win, popup}), Set(vim.api.nvim_tabpage_list_wins(0)))
 
         vim.fn.win_gotoid(win)
-        detour.Detour()
+        assert.False(detour.Detour())
         assert.same(Set({win, popup}), Set(vim.api.nvim_tabpage_list_wins(0)))
     end)
 
-    it("Switch focus to a popup's parent when it's closed", function ()
-        local wins = {}
+    it("Switch focus to a popup's floating parent when it's closed", function ()
+        vim.api.nvim_open_win(
+            vim.api.nvim_win_get_buf(0),
+            true,
+            {relative='win', width=12, height=3, bufpos={100,10}}
+        )
+
+        local wins = {vim.api.nvim_get_current_win()}
         for _=1,10 do
+            assert.True(detour.Detour())
             table.insert(wins, vim.api.nvim_get_current_win())
-            detour.Detour()
+            for j, win in ipairs(wins) do
+                assert.same(vim.api.nvim_win_get_config(win).focusable, j == #wins)
+            end
         end
 
         for _=1, 10 do
             vim.cmd.close()
-            assert.same(vim.api.nvim_get_current_win(), wins[#wins])
             table.remove(wins, #wins)
+            assert.same(vim.api.nvim_get_current_win(), wins[#wins])
+            for j, win in ipairs(wins) do
+                assert.same(vim.api.nvim_win_get_config(win).focusable, j == #wins)
+            end
+        end
+    end)
+
+    it("Switch focus to a popup's parent when it's closed", function ()
+        local wins = {vim.api.nvim_get_current_win()}
+        for _=1,10 do
+            assert.True(detour.Detour())
+            table.insert(wins, vim.api.nvim_get_current_win())
+            for j, win in ipairs(wins) do
+                if j > 1 then -- the base window cannot be unfocusable
+                    assert.same(vim.api.nvim_win_get_config(win).focusable, j == #wins)
+                end
+            end
+        end
+
+        for _=1, 10 do
+            vim.cmd.close()
+            table.remove(wins, #wins)
+            assert.same(vim.api.nvim_get_current_win(), wins[#wins])
+            for j, win in ipairs(wins) do
+                if j > 1 then -- the base window cannot be unfocusable
+                    assert.same(vim.api.nvim_win_get_config(win).focusable, j == #wins)
+                end
+            end
         end
     end)
 
