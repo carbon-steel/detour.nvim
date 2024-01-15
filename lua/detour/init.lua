@@ -1,8 +1,6 @@
 local M = {}
 
 local util = require('detour.util')
-local MIN_POPUP_HEIGHT = 3 -- border (2) + text (1)
-local MIN_POPUP_WIDTH = 3 -- border (2) + text (1)
 
 local internal = require('detour.internal')
 
@@ -87,7 +85,6 @@ local function construct_window_opts(coverable_windows, tab_id)
             table.insert(roots, window_id)
         end
     end
-    --print("window_ids " .. vim.inspect(window_ids))
 
     local uncoverable_windows = {}
     for _, root in ipairs(roots) do
@@ -95,7 +92,6 @@ local function construct_window_opts(coverable_windows, tab_id)
             table.insert(uncoverable_windows, root)
         end
     end
-    --print("uncoverable_windows " .. vim.inspect(uncoverable_windows))
     local horizontals = {}
     local verticals = {}
 
@@ -112,7 +108,7 @@ local function construct_window_opts(coverable_windows, tab_id)
 
     for top, _ in pairs(horizontals) do
         for bottom, _ in pairs(horizontals) do
-            if top + MIN_POPUP_HEIGHT <= bottom then
+            if top < bottom then
                 table.insert(floors, {top, bottom})
             end
         end
@@ -120,7 +116,7 @@ local function construct_window_opts(coverable_windows, tab_id)
 
     for left, _ in pairs(verticals) do
         for right, _ in pairs(verticals) do
-            if left + MIN_POPUP_WIDTH <= right then
+            if left < right then
                 table.insert(sides, {left, right})
             end
         end
@@ -172,12 +168,12 @@ local function construct_window_opts(coverable_windows, tab_id)
     local width = right - left
     local height = bottom - top
 
-    if height < MIN_POPUP_HEIGHT then
-        vim.api.nvim_err_writeln("[detour.nvim] (please file a github issue!) height is supposed to be at least " .. MIN_POPUP_HEIGHT)
+    if height < 1 then
+        vim.api.nvim_err_writeln("[detour.nvim] (please file a github issue!) height is supposed to be at least 1.")
         return nil
     end
-    if width < MIN_POPUP_WIDTH then
-        vim.api.nvim_err_writeln("[detour.nvim] (please file a github issue!) width is supposed to be at least .." .. MIN_POPUP_WIDTH)
+    if width < 1 then
+        vim.api.nvim_err_writeln("[detour.nvim] (please file a github issue!) width is supposed to be at least 1.")
         return nil
     end
 
@@ -188,8 +184,8 @@ local function construct_window_opts(coverable_windows, tab_id)
         relative = "editor",
         row = top,
         col = left,
-        width = width - 2, -- create some space for borders
-        height = height - 2, -- create some space for borders
+        width = (width - 2 > 0) and (width - 2) or width, -- create some space for borders
+        height = (height - 2 > 0) and (height - 2) or height, -- create some space for borders
         border = "rounded",
         zindex = 1,
     }
