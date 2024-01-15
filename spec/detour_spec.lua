@@ -31,6 +31,7 @@ describe("detour", function ()
         end
         vim.o.splitbelow = true
         vim.o.splitright = true
+        detour.setup(require('detour.internal').default_config)
     end)
 
     -- See Issue #25 for a discussion of duplication in this test suite.
@@ -262,6 +263,7 @@ describe("detour", function ()
     end)
 
     it("Switching horizontally between detours", function ()
+        detour.setup({ keep_focus_on_top = true })
         local left_base = vim.api.nvim_get_current_win()
 
         vim.cmd.vsplit()
@@ -330,6 +332,7 @@ describe("detour", function ()
     end)
 
     it("Switching vertically between detours", function ()
+        detour.setup({ keep_focus_on_top = true })
         local top_base = vim.api.nvim_get_current_win()
 
         vim.cmd.split()

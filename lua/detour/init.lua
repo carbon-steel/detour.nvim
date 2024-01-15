@@ -1,15 +1,13 @@
 local M = {}
 
 local util = require('detour.util')
-require('detour.plugin_autocmds')
 local MIN_POPUP_HEIGHT = 3 -- border (2) + text (1)
 local MIN_POPUP_WIDTH = 3 -- border (2) + text (1)
 
-local popup_to_covered_windows = require('detour.internal').popup_to_covered_windows
-local find_covered_bases = require('detour.internal').find_covered_bases
+local internal = require('detour.internal')
 
 local function wincmd_l()
-    local covered_bases = find_covered_bases(vim.api.nvim_get_current_win())
+    local covered_bases = util.find_covered_bases(vim.api.nvim_get_current_win())
     local rightest_base = covered_bases[1]
     for _, covered_base in ipairs(covered_bases) do
         local _, _, _, right_a = util.get_text_area_dimensions(covered_base)
@@ -24,7 +22,7 @@ local function wincmd_l()
 end
 
 local function wincmd_h()
-    local covered_bases = find_covered_bases(vim.api.nvim_get_current_win())
+    local covered_bases = util.find_covered_bases(vim.api.nvim_get_current_win())
     local leftest_base = covered_bases[1]
     for _, covered_base in ipairs(covered_bases) do
         local _, _, left_a, _ = util.get_text_area_dimensions(covered_base)
@@ -39,7 +37,7 @@ local function wincmd_h()
 end
 
 local function wincmd_j()
-    local covered_bases = find_covered_bases(vim.api.nvim_get_current_win())
+    local covered_bases = util.find_covered_bases(vim.api.nvim_get_current_win())
     local bottom_base = covered_bases[1]
     for _, covered_base in ipairs(covered_bases) do
         local _, bottom_a, _, _ = util.get_text_area_dimensions(covered_base)
@@ -54,7 +52,7 @@ local function wincmd_j()
 end
 
 local function wincmd_k()
-    local covered_bases = find_covered_bases(vim.api.nvim_get_current_win())
+    local covered_bases = util.find_covered_bases(vim.api.nvim_get_current_win())
     local top_base = covered_bases[1]
     for _, covered_base in ipairs(covered_bases) do
         local top_a, _, _, _ = util.get_text_area_dimensions(covered_base)
@@ -240,7 +238,7 @@ end
 -- Needs to be idempotent
 local function teardownDetour(window_id)
     vim.api.nvim_del_augroup_by_name(construct_augroup_name(window_id))
-    for _, covered_window in ipairs(popup_to_covered_windows[window_id]) do
+    for _, covered_window in ipairs(internal.popup_to_covered_windows[window_id]) do
         if vim.tbl_contains(vim.api.nvim_list_wins(), covered_window) and util.is_floating(covered_window) then
             vim.api.nvim_win_set_config(
                 covered_window,
@@ -249,7 +247,7 @@ local function teardownDetour(window_id)
                                { focusable = true }))
         end
     end
-    popup_to_covered_windows[window_id] = nil
+    internal.popup_to_covered_windows[window_id] = nil
 end
 
 local function stringify(number)
@@ -262,7 +260,7 @@ local function stringify(number)
 end
 
 local function is_available(window)
-    for _, unavailable_windows in pairs(popup_to_covered_windows) do
+    for _, unavailable_windows in pairs(internal.popup_to_covered_windows) do
         if util.contains_value(unavailable_windows, window) then
             return false
         end
@@ -274,7 +272,7 @@ local function resize_popup(window_id, window_opts)
     if window_opts ~= nil then
         vim.api.nvim_win_set_config(window_id, window_opts)
 
-        for _, covered_window in ipairs(popup_to_covered_windows[window_id]) do
+        for _, covered_window in ipairs(internal.popup_to_covered_windows[window_id]) do
             if vim.tbl_contains(vim.api.nvim_list_wins(), covered_window) and util.is_floating(covered_window) then
                 vim.api.nvim_win_set_config(
                     covered_window,
@@ -302,7 +300,7 @@ local function nested_popup()
     local window_opts = construct_nest(parent, parent_zindex + 1)
 
     local child = vim.api.nvim_open_win(vim.api.nvim_win_get_buf(0), true, window_opts)
-    popup_to_covered_windows[child] = { parent }
+    internal.popup_to_covered_windows[child] = { parent }
     local augroup_id = vim.api.nvim_create_augroup(construct_augroup_name(child), {})
     vim.api.nvim_create_autocmd({"User"}, {
         pattern = "PopupResized"..stringify(parent),
@@ -375,7 +373,7 @@ local function popup(bufnr, coverable_windows)
         return false
     end
     local popup_id = vim.api.nvim_open_win(bufnr, true, window_opts)
-    popup_to_covered_windows[popup_id] = coverable_windows
+    internal.popup_to_covered_windows[popup_id] = coverable_windows
     local augroup_id = vim.api.nvim_create_augroup(construct_augroup_name(popup_id), {})
     vim.api.nvim_create_autocmd({"WinResized"}, {
         group = augroup_id,
@@ -443,5 +441,34 @@ M.DetourWinCmdJ = wincmd_j
 M.DetourWinCmdK = wincmd_k
 M.DetourWinCmdL = wincmd_l
 M.DetourWinCmdW = wincmd_w
+
+local function validate_config(config, keys)
+    local success = true
+    if config.window_movement_keymaps ~= nil then
+        for _, key in ipairs(keys) do
+            if config[key] == nil then
+                vim.api.nvim_err_writeln("[detour.nvim] config is missing " .. key)
+                success = false
+            end
+        end
+    end
+
+    return success
+end
+
+function M.setup(user_config)
+    if user_config ~= nil then
+        local temp = vim.tbl_deep_extend("force", internal.config, user_config)
+        local ok = validate_config(temp, vim.tbl_keys(internal.config))
+        if ok then
+            internal.config = temp
+            internal.user_config = user_config
+        else
+            vim.api.nvim_err_writeln("[detour.nvim] Error detected in setup function. Discarding user provided configs and keeping default configs.")
+        end
+    end
+
+    require('detour.plugin_autocmds').setup_autocmds()
+end
 
 return M

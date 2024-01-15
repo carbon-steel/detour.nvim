@@ -1,5 +1,7 @@
 local M = {}
 
+local internal = require('detour.internal')
+
 function M.Set (list)
     local set = {}
     for _, l in ipairs(list) do set[l] = true end
@@ -71,13 +73,11 @@ function M.overlap(window_a, window_b)
 end
 
 function M.find_top_popup()
-    local popup_to_covered_windows = require('detour.internal').popup_to_covered_windows
-    local find_covered_bases = require('detour.internal').find_covered_bases
     local window_id = vim.api.nvim_get_current_win()
-    local all_covered_windows = vim.tbl_flatten(vim.tbl_values(popup_to_covered_windows))
-    for popup, _ in pairs(popup_to_covered_windows) do
+    local all_covered_windows = vim.tbl_flatten(vim.tbl_values(internal.popup_to_covered_windows))
+    for popup, _ in pairs(internal.popup_to_covered_windows) do
         if not vim.tbl_contains(all_covered_windows, popup) -- ignore popups with popups nested in them
-            and vim.tbl_contains(find_covered_bases(popup), window_id) then
+            and vim.tbl_contains(M.find_covered_bases(popup), window_id) then
             return popup
         end
     end
@@ -89,8 +89,8 @@ end
 function M.find_covered_bases(window_id)
     local temp_id = window_id
     local covered_bases = nil
-    while vim.tbl_get(M.popup_to_covered_windows, temp_id) do
-        covered_bases = M.popup_to_covered_windows[temp_id]
+    while vim.tbl_get(internal.popup_to_covered_windows, temp_id) do
+        covered_bases = internal.popup_to_covered_windows[temp_id]
         if #covered_bases == 0 then
             assert(false, "[detour.nvim] There should never be an empty array in popup_to_covered_windows.")
         end
@@ -109,6 +109,5 @@ function M.find_covered_bases(window_id)
         return vim.tbl_contains(vim.api.nvim_list_wins(), base) and M.overlap(base, window_id)
     end, covered_bases)
 end
-
 
 return M
