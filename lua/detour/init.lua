@@ -1,8 +1,8 @@
 local M = {}
 
 local util = require('detour.util')
-local MIN_POPUP_HEIGHT = 3 -- border (2) + text (1)
-local MIN_POPUP_WIDTH = 3 -- border (2) + text (1)
+local MIN_POPUP_HEIGHT = 1 -- border (2) + text (1)
+local MIN_POPUP_WIDTH = 1 -- border (2) + text (1)
 
 local internal = require('detour.internal')
 
@@ -87,7 +87,6 @@ local function construct_window_opts(coverable_windows, tab_id)
             table.insert(roots, window_id)
         end
     end
-    --print("window_ids " .. vim.inspect(window_ids))
 
     local uncoverable_windows = {}
     for _, root in ipairs(roots) do
@@ -95,7 +94,6 @@ local function construct_window_opts(coverable_windows, tab_id)
             table.insert(uncoverable_windows, root)
         end
     end
-    --print("uncoverable_windows " .. vim.inspect(uncoverable_windows))
     local horizontals = {}
     local verticals = {}
 
@@ -188,8 +186,8 @@ local function construct_window_opts(coverable_windows, tab_id)
         relative = "editor",
         row = top,
         col = left,
-        width = width - 2, -- create some space for borders
-        height = height - 2, -- create some space for borders
+        width = (width - 2 > 0) and (width - 2) or width, -- create some space for borders
+        height = (height - 2 > 0) and (height - 2) or height, -- create some space for borders
         border = "rounded",
         zindex = 1,
     }
