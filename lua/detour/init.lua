@@ -4,86 +4,6 @@ local util = require('detour.util')
 
 local internal = require('detour.internal')
 
-function M.DetourWinCmdL()
-    local covered_bases = util.find_covered_bases(vim.api.nvim_get_current_win())
-    local rightest_base = covered_bases[1]
-    for _, covered_base in ipairs(covered_bases) do
-        local _, _, _, right_a = util.get_text_area_dimensions(covered_base)
-        local _, _, _, right_b = util.get_text_area_dimensions(rightest_base)
-        if right_a > right_b then
-            rightest_base = covered_base
-        end
-    end
-    vim.g.manually_switching_window_focus = true
-    vim.fn.win_gotoid(rightest_base)
-    vim.g.manually_switching_window_focus = false
-    vim.cmd.wincmd('l')
-    vim.api.nvim_exec_autocmds("User", { pattern = "WinEnter" }) -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
-end
-
-function M.DetourWinCmdH()
-    local covered_bases = util.find_covered_bases(vim.api.nvim_get_current_win())
-    local leftest_base = covered_bases[1]
-    for _, covered_base in ipairs(covered_bases) do
-        local _, _, left_a, _ = util.get_text_area_dimensions(covered_base)
-        local _, _, left_b, _ = util.get_text_area_dimensions(leftest_base)
-        if left_a < left_b then
-            leftest_base = covered_base
-        end
-    end
-    vim.g.manually_switching_window_focus = true
-    vim.fn.win_gotoid(leftest_base)
-    vim.g.manually_switching_window_focus = false
-    vim.cmd.wincmd('h')
-    vim.cmd.doautocmd("User WinEnter") -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
-end
-
-function M.DetourWinCmdJ()
-    local covered_bases = util.find_covered_bases(vim.api.nvim_get_current_win())
-    local bottom_base = covered_bases[1]
-    for _, covered_base in ipairs(covered_bases) do
-        local _, bottom_a, _, _ = util.get_text_area_dimensions(covered_base)
-        local _, bottom_b, _, _ = util.get_text_area_dimensions(bottom_base)
-        if bottom_a > bottom_b then
-            bottom_base = covered_base
-        end
-    end
-    vim.g.manually_switching_window_focus = true
-    vim.fn.win_gotoid(bottom_base)
-    vim.g.manually_switching_window_focus = false
-    vim.cmd.wincmd('j')
-    vim.cmd.doautocmd("User WinEnter") -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
-end
-
-function M.DetourWinCmdK()
-    local covered_bases = util.find_covered_bases(vim.api.nvim_get_current_win())
-    local top_base = covered_bases[1]
-    for _, covered_base in ipairs(covered_bases) do
-        local top_a, _, _, _ = util.get_text_area_dimensions(covered_base)
-        local top_b, _, _, _ = util.get_text_area_dimensions(top_base)
-        if top_a < top_b then
-            top_base = covered_base
-        end
-    end
-    vim.g.manually_switching_window_focus = true
-    vim.fn.win_gotoid(top_base)
-    vim.g.manually_switching_window_focus = false
-    vim.cmd.wincmd('k')
-    vim.cmd.doautocmd("User WinEnter") -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
-end
-
-function M.DetourWinCmdW()
-    vim.g.manually_switching_window_focus = true
-    vim.cmd.wincmd('w')
-    vim.g.manually_switching_window_focus = false
-    while vim.api.nvim_get_current_win() ~= util.find_top_popup() do
-        -- TODO: add in a mechanism to prevent infinite loop
-        vim.g.manually_switching_window_focus = true
-        vim.cmd.wincmd('w')
-        vim.g.manually_switching_window_focus = false
-    end
-end
-
 local function is_statusline_global()
     if vim.o.laststatus == 3 then
         return false -- the statusline is global. No specific window has it.
@@ -442,35 +362,6 @@ end
 
 M.DetourCurrentWindow = function ()
     return popup(vim.api.nvim_get_current_buf(), {vim.api.nvim_get_current_win()})
-end
-
-local function validate_config(config, keys)
-    local success = true
-    if config.window_movement_keymaps ~= nil then
-        for _, key in ipairs(keys) do
-            if config[key] == nil then
-                vim.api.nvim_err_writeln("[detour.nvim] config is missing " .. key)
-                success = false
-            end
-        end
-    end
-
-    return success
-end
-
-function M.setup(user_config)
-    if user_config ~= nil then
-        local temp = vim.tbl_deep_extend("force", internal.config, user_config)
-        local ok = validate_config(temp, vim.tbl_keys(internal.config))
-        if ok then
-            internal.config = temp
-            internal.user_config = user_config
-        else
-            vim.api.nvim_err_writeln("[detour.nvim] Error detected in setup function. Discarding user provided configs and keeping default configs.")
-        end
-    end
-
-    require('detour.plugin_autocmds').setup_autocmds()
 end
 
 return M
