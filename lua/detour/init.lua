@@ -14,7 +14,9 @@ function M.DetourWinCmdL()
             rightest_base = covered_base
         end
     end
-    vim.cmd('noautocmd call win_gotoid(' .. rightest_base .. ')')
+    vim.g.manually_switching_window_focus = true
+    vim.fn.win_gotoid(rightest_base)
+    vim.g.manually_switching_window_focus = false
     vim.cmd.wincmd('l')
     vim.api.nvim_exec_autocmds("User", { pattern = "WinEnter" }) -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
 end
@@ -29,7 +31,9 @@ function M.DetourWinCmdH()
             leftest_base = covered_base
         end
     end
-    vim.cmd('noautocmd call win_gotoid(' .. leftest_base .. ')')
+    vim.g.manually_switching_window_focus = true
+    vim.fn.win_gotoid(leftest_base)
+    vim.g.manually_switching_window_focus = false
     vim.cmd.wincmd('h')
     vim.cmd.doautocmd("User WinEnter") -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
 end
@@ -44,7 +48,9 @@ function M.DetourWinCmdJ()
             bottom_base = covered_base
         end
     end
-    vim.cmd('noautocmd call win_gotoid(' .. bottom_base .. ')')
+    vim.g.manually_switching_window_focus = true
+    vim.fn.win_gotoid(bottom_base)
+    vim.g.manually_switching_window_focus = false
     vim.cmd.wincmd('j')
     vim.cmd.doautocmd("User WinEnter") -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
 end
@@ -59,16 +65,22 @@ function M.DetourWinCmdK()
             top_base = covered_base
         end
     end
-    vim.cmd('noautocmd call win_gotoid(' .. top_base .. ')')
+    vim.g.manually_switching_window_focus = true
+    vim.fn.win_gotoid(top_base)
+    vim.g.manually_switching_window_focus = false
     vim.cmd.wincmd('k')
     vim.cmd.doautocmd("User WinEnter") -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
 end
 
 function M.DetourWinCmdW()
-    vim.cmd('noautocmd wincmd w')
+    vim.g.manually_switching_window_focus = true
+    vim.cmd.wincmd('w')
+    vim.g.manually_switching_window_focus = false
     while vim.api.nvim_get_current_win() ~= util.find_top_popup() do
         -- TODO: add in a mechanism to prevent infinite loop
-        vim.cmd('noautocmd wincmd w')
+        vim.g.manually_switching_window_focus = true
+        vim.cmd.wincmd('w')
+        vim.g.manually_switching_window_focus = false
     end
 end
 

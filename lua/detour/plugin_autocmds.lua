@@ -11,7 +11,9 @@ function M.setup_autocmds()
         vim.api.nvim_create_autocmd({"WinEnter"}, {
             group = plugin_augroup,
             callback = function ()
-                vim.fn.win_gotoid(util.find_top_popup())
+                if not vim.g.manually_switching_window_focus then
+                    vim.cmd.doautocmd("User WinEnter")
+                end
             end,
         })
 
