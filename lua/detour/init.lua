@@ -4,7 +4,7 @@ local util = require('detour.util')
 
 local internal = require('detour.internal')
 
-local function wincmd_l()
+function M.DetourWinCmdL()
     local covered_bases = util.find_covered_bases(vim.api.nvim_get_current_win())
     local rightest_base = covered_bases[1]
     for _, covered_base in ipairs(covered_bases) do
@@ -19,7 +19,7 @@ local function wincmd_l()
     vim.api.nvim_exec_autocmds("User", { pattern = "WinEnter" }) -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
 end
 
-local function wincmd_h()
+function M.DetourWinCmdH()
     local covered_bases = util.find_covered_bases(vim.api.nvim_get_current_win())
     local leftest_base = covered_bases[1]
     for _, covered_base in ipairs(covered_bases) do
@@ -34,7 +34,7 @@ local function wincmd_h()
     vim.cmd.doautocmd("User WinEnter") -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
 end
 
-local function wincmd_j()
+function M.DetourWinCmdJ()
     local covered_bases = util.find_covered_bases(vim.api.nvim_get_current_win())
     local bottom_base = covered_bases[1]
     for _, covered_base in ipairs(covered_bases) do
@@ -49,7 +49,7 @@ local function wincmd_j()
     vim.cmd.doautocmd("User WinEnter") -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
 end
 
-local function wincmd_k()
+function M.DetourWinCmdK()
     local covered_bases = util.find_covered_bases(vim.api.nvim_get_current_win())
     local top_base = covered_bases[1]
     for _, covered_base in ipairs(covered_bases) do
@@ -64,7 +64,7 @@ local function wincmd_k()
     vim.cmd.doautocmd("User WinEnter") -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
 end
 
-local function wincmd_w()
+function M.DetourWinCmdW()
     vim.cmd('noautocmd wincmd w')
     while vim.api.nvim_get_current_win() ~= util.find_top_popup() do
         -- TODO: add in a mechanism to prevent infinite loop
@@ -431,12 +431,6 @@ end
 M.DetourCurrentWindow = function ()
     return popup(vim.api.nvim_get_current_buf(), {vim.api.nvim_get_current_win()})
 end
-
-M.DetourWinCmdH = wincmd_h
-M.DetourWinCmdJ = wincmd_j
-M.DetourWinCmdK = wincmd_k
-M.DetourWinCmdL = wincmd_l
-M.DetourWinCmdW = wincmd_w
 
 local function validate_config(config, keys)
     local success = true
