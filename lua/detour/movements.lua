@@ -11,13 +11,13 @@ vim.api.nvim_create_autocmd({"WinEnter"}, {
     group = plugin_augroup,
     callback = function ()
         if not vim.g.manually_switching_window_focus then
-            vim.cmd.doautocmd("User WinEnter")
+            vim.cmd.doautocmd("User DetourWinEnter")
         end
     end,
 })
 
 vim.api.nvim_create_autocmd({"User"}, {
-    pattern = "WinEnter",
+    pattern = "DetourWinEnter",
     group = plugin_augroup,
     callback = function ()
         vim.fn.win_gotoid(util.find_top_popup())
@@ -38,7 +38,7 @@ function M.DetourWinCmdL()
     vim.fn.win_gotoid(rightest_base)
     vim.g.manually_switching_window_focus = false
     vim.cmd.wincmd('l')
-    vim.api.nvim_exec_autocmds("User", { pattern = "WinEnter" }) -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
+    vim.api.nvim_exec_autocmds("User", { pattern = "DetourWinEnter" }) -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
 end
 
 function M.DetourWinCmdH()
@@ -55,7 +55,7 @@ function M.DetourWinCmdH()
     vim.fn.win_gotoid(leftest_base)
     vim.g.manually_switching_window_focus = false
     vim.cmd.wincmd('h')
-    vim.cmd.doautocmd("User WinEnter") -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
+    vim.cmd.doautocmd("User DetourWinEnter") -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
 end
 
 function M.DetourWinCmdJ()
@@ -72,7 +72,7 @@ function M.DetourWinCmdJ()
     vim.fn.win_gotoid(bottom_base)
     vim.g.manually_switching_window_focus = false
     vim.cmd.wincmd('j')
-    vim.cmd.doautocmd("User WinEnter") -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
+    vim.cmd.doautocmd("User DetourWinEnter") -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
 end
 
 function M.DetourWinCmdK()
@@ -89,7 +89,7 @@ function M.DetourWinCmdK()
     vim.fn.win_gotoid(top_base)
     vim.g.manually_switching_window_focus = false
     vim.cmd.wincmd('k')
-    vim.cmd.doautocmd("User WinEnter") -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
+    vim.cmd.doautocmd("User DetourWinEnter") -- This is necessary as the above wincmd is not guaranteed to trigger WinEnter (as any actual window movement may not occur)
 end
 
 function M.DetourWinCmdW()
