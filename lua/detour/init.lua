@@ -170,7 +170,7 @@ end
 local function teardownDetour(window_id)
     vim.api.nvim_del_augroup_by_name(construct_augroup_name(window_id))
     for _, covered_window in ipairs(internal.popup_to_covered_windows[window_id]) do
-        if vim.tbl_contains(vim.api.nvim_list_wins(), covered_window) and util.is_floating(covered_window) then
+        if util.is_open(covered_window) and util.is_floating(covered_window) then
             vim.api.nvim_win_set_config(
                 covered_window,
                 vim.tbl_extend("force",
@@ -204,7 +204,7 @@ local function resize_popup(window_id, window_opts)
         vim.api.nvim_win_set_config(window_id, window_opts)
 
         for _, covered_window in ipairs(internal.popup_to_covered_windows[window_id]) do
-            if vim.tbl_contains(vim.api.nvim_list_wins(), covered_window) and util.is_floating(covered_window) then
+            if util.is_open(covered_window) and util.is_floating(covered_window) then
                 vim.api.nvim_win_set_config(
                     covered_window,
                     vim.tbl_extend("force",

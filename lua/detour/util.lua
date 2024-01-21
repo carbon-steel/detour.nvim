@@ -110,4 +110,8 @@ function M.find_covered_bases(window_id)
     end, covered_bases)
 end
 
+function M.is_open(window_id)
+    return vim.tbl_contains(vim.api.nvim_list_wins(), window_id)
+end
+
 return M
