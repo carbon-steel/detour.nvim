@@ -4,6 +4,9 @@ local util = require('detour.util')
 
 local internal = require('detour.internal')
 
+-- This plugin utilizes custom User events:
+-- * User DetourPopupResized<id>: This event is triggered whenever a detour popup is resized. The event pattern has the window's ID concatenated to it.
+
 local function is_statusline_global()
     if vim.o.laststatus == 3 then
         return false -- the statusline is global. No specific window has it.
@@ -211,7 +214,7 @@ local function resize_popup(window_id, window_opts)
         end
 
         -- Fully complete resizing before propogating event.
-        vim.cmd.doautocmd("User PopupResized"..stringify(window_id))
+        vim.cmd.doautocmd("User DetourPopupResized"..stringify(window_id))
     end
 end
 
@@ -231,7 +234,7 @@ local function nested_popup()
     internal.popup_to_covered_windows[child] = { parent }
     local augroup_id = vim.api.nvim_create_augroup(construct_augroup_name(child), {})
     vim.api.nvim_create_autocmd({"User"}, {
-        pattern = "PopupResized"..stringify(parent),
+        pattern = "DetourPopupResized"..stringify(parent),
         group = augroup_id,
         callback = function ()
             local new_window_opts = construct_nest(parent)
