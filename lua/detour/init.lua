@@ -375,11 +375,26 @@ local function popup(bufnr, coverable_windows)
     return true
 end
 
+-- Neovim autocmd events are quite nuanced:
+-- 1. Autocmds do not trigger autocmd events by default (you need to set `nested = true` to do that).
+-- 2. WinClosed autocmds do not trigger WinClosed events even if `nested = true`.
+-- 3. Even with `nested = true`, there is a limit to how many nested events Neovim will trigger (max depth is 10).
+-- Hence, there are possible cases where popup detours will be closed by the user's autocmds without triggering a WinClosed event. To address this, we must make sure to update the plugin's state before executing each user command. Also, we must double check what windows are still open during this plugin's autocmd callbacks.
+local function garbageCollect()
+    for _, popup_id in ipairs(vim.tbl_keys(internal.popup_to_covered_windows)) do -- storing keys in their own table just in case the changes to popup_to_covered_windows mess things up
+        if not util.is_open(popup_id) then
+            teardownDetour(popup_id)
+        end
+    end
+end
+
 M.Detour = function ()
+    garbageCollect()
     return popup(vim.api.nvim_get_current_buf())
 end
 
 M.DetourCurrentWindow = function ()
+    garbageCollect()
     return popup(vim.api.nvim_get_current_buf(), {vim.api.nvim_get_current_win()})
 end
 

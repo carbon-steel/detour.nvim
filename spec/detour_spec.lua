@@ -269,4 +269,21 @@ describe("detour", function ()
         vim.cmd.split()
         assert.same(vim.api.nvim_get_current_win(), popup)
     end)
+
+    it("Handle cases when popups close without throwing a WinClosed event", function ()
+        pending("WinResized doesn't seem to work when running nvim as a command.")
+        vim.cmd.vsplit()
+        detour.DetourCurrentWindow()
+        local popup = vim.api.nvim_get_current_win()
+        vim.api.nvim_create_autocmd({ "WinLeave" }, {
+            callback = function()
+                vim.api.nvim_win_close(0, true)
+                return true
+            end,
+        })
+        vim.cmd.wincmd('h')
+        assert.False(util.is_open(popup))
+        vim.cmd.wincmd('l')
+        assert.True(detour.DetourCurrentWindow())
+    end)
 end)
