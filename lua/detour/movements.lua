@@ -4,11 +4,11 @@ local util = require('detour.util')
 
 -- The movements module introduces backward-incompatible changes. Users who `require` this module will have the new autocmds that allow for "popup aware" window movements. Those who do not will stay with the previous behavior. This approach allows users to opt-in to the new behavior instead of having the behavior change from under their feet.
 
-local plugin_augroup = "detour-plugin"
-vim.api.nvim_create_augroup(plugin_augroup, { clear = true })
+local module_augroup = "detour-movements"
+vim.api.nvim_create_augroup(module_augroup, { clear = true })
 
 vim.api.nvim_create_autocmd({"WinEnter"}, {
-    group = plugin_augroup,
+    group = module_augroup,
     callback = function ()
         if not vim.g.manually_switching_window_focus then
             vim.cmd.doautocmd("User DetourWinEnter")
@@ -18,7 +18,7 @@ vim.api.nvim_create_autocmd({"WinEnter"}, {
 
 vim.api.nvim_create_autocmd({"User"}, {
     pattern = "DetourWinEnter",
-    group = plugin_augroup,
+    group = module_augroup,
     callback = function ()
         vim.fn.win_gotoid(util.find_top_popup())
     end,
