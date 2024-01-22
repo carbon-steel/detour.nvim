@@ -29,6 +29,8 @@ describe("detour", function ()
                 vim.api.nvim_del_autocmd(autocmd.id)
             end
         end
+        vim.o.splitbelow = true
+        vim.o.splitright = true
     end)
 
     -- See Issue #25 for a discussion of duplication in this test suite.
@@ -259,4 +261,12 @@ describe("detour", function ()
         end
     end)
 
+
+    it("Always move focus to top popup", function ()
+        pending("WinEnter doesn't work when running nvim as a command.")
+        detour.Detour()
+        local popup = vim.api.nvim_get_current_win()
+        vim.cmd.split()
+        assert.same(vim.api.nvim_get_current_win(), popup)
+    end)
 end)
