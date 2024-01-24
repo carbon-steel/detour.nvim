@@ -114,4 +114,8 @@ function M.is_open(window_id)
     return vim.tbl_contains(vim.api.nvim_list_wins(), window_id)
 end
 
+function M.construct_augroup_name(window_id)
+    return "detour-"..window_id
+end
+
 return M

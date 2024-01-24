@@ -162,13 +162,9 @@ local function construct_nest(parent, layer)
     }
 end
 
-local function construct_augroup_name(window_id)
-    return "detour-"..window_id
-end
-
 -- Needs to be idempotent
 local function teardownDetour(window_id)
-    vim.api.nvim_del_augroup_by_name(construct_augroup_name(window_id))
+    vim.api.nvim_del_augroup_by_name(util.construct_augroup_name(window_id))
     for _, covered_window in ipairs(internal.popup_to_covered_windows[window_id]) do
         if util.is_open(covered_window) and util.is_floating(covered_window) then
             vim.api.nvim_win_set_config(
@@ -199,9 +195,10 @@ local function is_available(window)
     return true
 end
 
-local function resize_popup(window_id, window_opts)
-    if window_opts ~= nil then
-        vim.api.nvim_win_set_config(window_id, window_opts)
+local function resize_popup(window_id, new_window_opts)
+    if new_window_opts ~= nil then
+        local current_window_opts = vim.api.nvim_win_get_config(window_id)
+        vim.api.nvim_win_set_config(window_id, vim.tbl_extend("force", current_window_opts, new_window_opts))
 
         for _, covered_window in ipairs(internal.popup_to_covered_windows[window_id]) do
             if util.is_open(covered_window) and util.is_floating(covered_window) then
@@ -232,7 +229,7 @@ local function popup_above_float()
 
     local child = vim.api.nvim_open_win(vim.api.nvim_win_get_buf(0), true, window_opts)
     internal.popup_to_covered_windows[child] = { parent }
-    local augroup_id = vim.api.nvim_create_augroup(construct_augroup_name(child), {})
+    local augroup_id = vim.api.nvim_create_augroup(util.construct_augroup_name(child), {})
     vim.api.nvim_create_autocmd({"User"}, {
         pattern = "DetourPopupResized"..stringify(parent),
         group = augroup_id,
@@ -313,7 +310,7 @@ local function popup(bufnr, coverable_windows)
     end
     local popup_id = vim.api.nvim_open_win(bufnr, true, window_opts)
     internal.popup_to_covered_windows[popup_id] = coverable_windows
-    local augroup_id = vim.api.nvim_create_augroup(construct_augroup_name(popup_id), {})
+    local augroup_id = vim.api.nvim_create_augroup(util.construct_augroup_name(popup_id), {})
 
     local function handle_base_resize()
         if not util.is_open(popup_id) then
