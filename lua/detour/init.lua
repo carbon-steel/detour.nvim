@@ -218,7 +218,7 @@ local function resize_popup(window_id, window_opts)
     end
 end
 
-local function nested_popup()
+local function popup_above_float()
     local parent = vim.api.nvim_get_current_win()
     local tab_id = vim.api.nvim_get_current_tabpage()
 
@@ -271,14 +271,13 @@ local function nested_popup()
     })
     -- We're running this to make sure initializing popups runs the same code path as updating popups
     -- We make sure to do this after all state and autocmds are set.
-    resize_popup(child, window_opts)
+    vim.cmd.doautocmd("User DetourPopupResized"..stringify(parent))
     return true
 end
 
 local function popup(bufnr, coverable_windows)
-    local parent = vim.api.nvim_get_current_win()
-    if util.is_floating(parent) then
-        return nested_popup()
+    if util.is_floating(vim.api.nvim_get_current_win()) then
+        return popup_above_float()
     end
     local tab_id = vim.api.nvim_get_current_tabpage()
     if coverable_windows == nil then
@@ -307,6 +306,7 @@ local function popup(bufnr, coverable_windows)
         end
     end
 
+    -- We call handle_base_resize() later which overwrites the window_opts we set here, but this is still useful to validate that a popup can successfully be created at all.
     local window_opts = construct_window_opts(coverable_windows, tab_id)
     if window_opts == nil then
         return false
@@ -314,6 +314,17 @@ local function popup(bufnr, coverable_windows)
     local popup_id = vim.api.nvim_open_win(bufnr, true, window_opts)
     internal.popup_to_covered_windows[popup_id] = coverable_windows
     local augroup_id = vim.api.nvim_create_augroup(construct_augroup_name(popup_id), {})
+
+    local function handle_base_resize()
+        if not util.is_open(popup_id) then
+            teardownDetour(popup_id)
+            return
+        end
+        local new_window_opts = construct_window_opts(coverable_windows, tab_id)
+        -- Even if new_window_opts is nil, do not close the popup as it is being used by the user. Just leave it for the user to handle.
+        resize_popup(popup_id, new_window_opts)
+    end
+
     vim.api.nvim_create_autocmd({"WinResized"}, {
         group = augroup_id,
         callback = function ()
@@ -323,8 +334,7 @@ local function popup(bufnr, coverable_windows)
             end
             for _, x in ipairs(vim.v.event.windows) do
                 if util.contains_element(vim.api.nvim_tabpage_list_wins(tab_id), x) then
-                    local new_window_opts = construct_window_opts(coverable_windows, tab_id)
-                    resize_popup(popup_id, new_window_opts)
+                    handle_base_resize()
                     break
                 end
             end
@@ -371,7 +381,7 @@ local function popup(bufnr, coverable_windows)
     end
     -- We're running this to make sure initializing popups runs the same code path as updating popups
     -- We make sure to do this after all state and autocmds are set.
-    resize_popup(popup_id, window_opts)
+    handle_base_resize()
     return true
 end
 
