@@ -322,7 +322,7 @@ local function popup(bufnr, coverable_windows)
         resize_popup(popup_id, new_window_opts)
     end
 
-    vim.api.nvim_create_autocmd({"WinResized"}, {
+    vim.api.nvim_create_autocmd({"WinResized", "VimResized"}, {
         group = augroup_id,
         callback = function ()
             if not util.is_open(popup_id) then
