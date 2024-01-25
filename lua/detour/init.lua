@@ -177,15 +177,6 @@ local function teardownDetour(window_id)
     internal.popup_to_covered_windows[window_id] = nil
 end
 
-local function stringify(number)
-    local base = string.byte("a")
-    local values = {}
-    for digit in (""..number):gmatch(".") do
-        values[#values+1] = tonumber(digit) + base
-    end
-    return string.char(unpack(values))
-end
-
 local function is_available(window)
     for _, unavailable_windows in pairs(internal.popup_to_covered_windows) do
         if util.contains_value(unavailable_windows, window) then
@@ -211,7 +202,7 @@ local function resize_popup(window_id, new_window_opts)
         end
 
         -- Fully complete resizing before propogating event.
-        vim.cmd.doautocmd("User DetourPopupResized"..stringify(window_id))
+        vim.cmd.doautocmd("User DetourPopupResized"..util.stringify(window_id))
     end
 end
 
@@ -231,7 +222,7 @@ local function popup_above_float()
     internal.popup_to_covered_windows[child] = { parent }
     local augroup_id = vim.api.nvim_create_augroup(util.construct_augroup_name(child), {})
     vim.api.nvim_create_autocmd({"User"}, {
-        pattern = "DetourPopupResized"..stringify(parent),
+        pattern = "DetourPopupResized"..util.stringify(parent),
         group = augroup_id,
         callback = function ()
             if not util.is_open(child) then
@@ -268,7 +259,7 @@ local function popup_above_float()
     })
     -- We're running this to make sure initializing popups runs the same code path as updating popups
     -- We make sure to do this after all state and autocmds are set.
-    vim.cmd.doautocmd("User DetourPopupResized"..stringify(parent))
+    vim.cmd.doautocmd("User DetourPopupResized"..util.stringify(parent))
     return true
 end
 

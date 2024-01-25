@@ -118,4 +118,13 @@ function M.construct_augroup_name(window_id)
     return "detour-"..window_id
 end
 
+function M.stringify(number)
+    local base = string.byte("a")
+    local values = {}
+    for digit in (""..number):gmatch(".") do
+        values[#values+1] = tonumber(digit) + base
+    end
+    return string.char(unpack(values))
+end
+
 return M
