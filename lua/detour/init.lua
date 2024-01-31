@@ -386,6 +386,8 @@ local function garbageCollect()
     end
 end
 
+assert(vim.fn.timer_start(300, vim.schedule_wrap(garbageCollect), { ['repeat'] = -1 }) ~= -1, "[detour.nvim] Failed to create garbageCollect timer.")
+
 M.Detour = function ()
     garbageCollect()
     return popup(vim.api.nvim_get_current_buf())
