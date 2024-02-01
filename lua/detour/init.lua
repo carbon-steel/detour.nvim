@@ -212,7 +212,7 @@ local function popup_above_float()
 
     if not is_available(parent) then
         vim.api.nvim_err_writeln("[detour.nvim] This popup already has a child nested inside it:" .. parent)
-        return false
+        return nil
     end
 
     local parent_zindex = util.get_maybe_zindex(parent) or 0
@@ -260,7 +260,7 @@ local function popup_above_float()
     -- We're running this to make sure initializing popups runs the same code path as updating popups
     -- We make sure to do this after all state and autocmds are set.
     vim.cmd.doautocmd("User DetourPopupResized"..util.stringify(parent))
-    return true
+    return child
 end
 
 local function popup(bufnr, coverable_windows)
@@ -279,25 +279,25 @@ local function popup(bufnr, coverable_windows)
 
     if #coverable_windows == 0 then
         vim.api.nvim_err_writeln("[detour.nvim] No windows provided in coverable_windows.")
-        return false
+        return nil
     end
 
     for _, window in ipairs(coverable_windows) do
         if util.is_floating(window) then
             vim.api.nvim_err_writeln("[detour.nvim] No floating windows allowed in base (ie, non-nested) popup" .. window)
-            return false
+            return nil
         end
 
         if not is_available(window) then
             vim.api.nvim_err_writeln("[detour.nvim] This window is already reserved by another popup:" .. window)
-            return false
+            return nil
         end
     end
 
     -- We call handle_base_resize() later which overwrites the window_opts we set here, but this is still useful to validate that a popup can successfully be created at all.
     local window_opts = construct_window_opts(coverable_windows, tab_id)
     if window_opts == nil then
-        return false
+        return nil
     end
     local popup_id = vim.api.nvim_open_win(bufnr, true, window_opts)
     internal.popup_to_covered_windows[popup_id] = coverable_windows
@@ -370,7 +370,7 @@ local function popup(bufnr, coverable_windows)
     -- We're running this to make sure initializing popups runs the same code path as updating popups
     -- We make sure to do this after all state and autocmds are set.
     handle_base_resize()
-    return true
+    return popup_id
 end
 
 -- Neovim autocmd events are quite nuanced:
