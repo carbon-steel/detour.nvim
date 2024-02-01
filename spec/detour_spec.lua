@@ -1,5 +1,6 @@
 local detour = require("detour")
 local util = require("detour.util")
+local features = require("detour.features")
 
 function Set (list)
     local set = {}
@@ -272,5 +273,19 @@ describe("detour", function ()
         assert.False(util.is_open(popup))
         vim.cmd.wincmd('l')
         assert(detour.DetourCurrentWindow())
+    end)
+
+    it("Test CloseOnLeave", function ()
+        local popup_id = assert(detour.Detour())
+        features.CloseOnLeave(popup_id)
+        assert.True(util.is_open(popup_id))
+        vim.cmd.wincmd('w')
+        assert.False(util.is_open(popup_id))
+
+        popup_id = assert(detour.Detour())
+        features.CloseOnLeave(popup_id)
+        assert.True(util.is_open(popup_id))
+        vim.cmd.split()
+        assert.False(util.is_open(popup_id))
     end)
 end)

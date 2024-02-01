@@ -13,14 +13,33 @@ local function update_title(window_id)
         { title = title }))
 end
 
-function M.ShowPathInTitle(window_id)
+function M.ShowPathInTitle(popup_id)
     require('detour.show_path_in_title')
-    update_title(window_id)
+    update_title(popup_id)
 
     vim.api.nvim_create_autocmd({"User"}, {
-        pattern = "DetourUpdateTitle"..util.stringify(window_id),
-        group = util.construct_augroup_name(window_id),
-        callback = function () update_title(window_id) end
+        pattern = "DetourUpdateTitle"..util.stringify(popup_id),
+        group = util.construct_augroup_name(popup_id),
+        callback = function () update_title(popup_id) end
+    })
+end
+
+function M.CloseOnLeave(popup_id)
+    -- This autocmd will close the created detour popup when you focus on a different window.
+    vim.api.nvim_create_autocmd({ "WinEnter" }, {
+        group = util.construct_augroup_name(popup_id),
+        callback = function()
+            local curr_window = vim.api.nvim_get_current_win()
+            -- Skip cases where we are entering popups (eg, menus, nested popups, the detour popup itself).
+            if vim.api.nvim_win_get_config(curr_window).relative ~= "" then
+                return
+            end
+
+            -- Check to make sure the popup has not already been closed
+            if util.is_open(popup_id) then
+                vim.api.nvim_win_close(popup_id, false)
+            end
+        end,
     })
 end
 
