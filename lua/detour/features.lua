@@ -6,7 +6,11 @@ local function update_title(window_id)
     -- Assumption: window_id is not closed as this was triggered from the fact that we are redrawing this window.
     local buffer_id = vim.api.nvim_win_get_buf(window_id)
     local path = vim.api.nvim_buf_get_name(buffer_id)
+    local home = vim.api.nvim_win_call(window_id, vim.cmd.pwd)
     local title = vim.fn.fnamemodify(path, ":.")
+    if title:sub(1, #home) == home then
+        title = title:sub(#home + 1)
+    end
     vim.api.nvim_win_set_config(window_id,
         vim.tbl_extend("force",
         vim.api.nvim_win_get_config(window_id),
