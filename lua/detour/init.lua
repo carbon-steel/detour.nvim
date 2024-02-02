@@ -311,7 +311,8 @@ local function popup(bufnr, coverable_windows)
                 teardownDetour(popup_id)
                 return
             end
-            for _, x in ipairs(vim.v.event.windows) do
+            -- WinResized populates vim.v.event.windows but VimResized does not so we default to listing all windows.
+            for _, x in ipairs(vim.v.event.windows or vim.api.nvim_tabpage_list_wins(tab_id)) do
                 if util.contains_element(vim.api.nvim_tabpage_list_wins(tab_id), x) then
                     handle_base_resize()
                     break
