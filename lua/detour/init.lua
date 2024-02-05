@@ -162,10 +162,14 @@ local function construct_nest(parent, layer)
     }
 end
 
+local function construct_augroup_name(window_id)
+    return "detour-"..window_id
+end
+
 -- Needs to be idempotent
 local function teardownDetour(window_id)
-    vim.api.nvim_del_augroup_by_name(util.construct_augroup_name(window_id))
-    for _, covered_window in ipairs(internal.get_original_coverable_windows(window_id)) do
+    vim.api.nvim_del_augroup_by_name(construct_augroup_name(window_id))
+    for _, covered_window in ipairs(internal.popup_to_covered_windows[window_id]) do
         if util.is_open(covered_window) and util.is_floating(covered_window) then
             vim.api.nvim_win_set_config(
                 covered_window,
@@ -174,16 +178,33 @@ local function teardownDetour(window_id)
                                { focusable = true }))
         end
     end
-    internal.erase_popup(window_id)
+    internal.popup_to_covered_windows[window_id] = nil
 end
 
-local function resize_popup(window_id, new_window_opts)
-    if new_window_opts ~= nil then
-        local current_window_opts = vim.api.nvim_win_get_config(window_id)
-        vim.api.nvim_win_set_config(window_id, vim.tbl_extend("force", current_window_opts, new_window_opts))
+local function stringify(number)
+    local base = string.byte("a")
+    local values = {}
+    for digit in (""..number):gmatch(".") do
+        values[#values+1] = tonumber(digit) + base
+    end
+    return string.char(unpack(values))
+end
 
-        for _, covered_window in ipairs(internal.get_coverable_windows(window_id)) do
-            if util.is_floating(covered_window) then
+local function is_available(window)
+    for _, unavailable_windows in pairs(internal.popup_to_covered_windows) do
+        if util.contains_value(unavailable_windows, window) then
+            return false
+        end
+    end
+    return true
+end
+
+local function resize_popup(window_id, window_opts)
+    if window_opts ~= nil then
+        vim.api.nvim_win_set_config(window_id, window_opts)
+
+        for _, covered_window in ipairs(internal.popup_to_covered_windows[window_id]) do
+            if util.is_open(covered_window) and util.is_floating(covered_window) then
                 vim.api.nvim_win_set_config(
                     covered_window,
                     vim.tbl_extend("force",
@@ -193,27 +214,27 @@ local function resize_popup(window_id, new_window_opts)
         end
 
         -- Fully complete resizing before propogating event.
-        vim.cmd.doautocmd("User DetourPopupResized"..util.stringify(window_id))
+        vim.cmd.doautocmd("User DetourPopupResized"..stringify(window_id))
     end
 end
 
-local function popup_above_float()
+local function nested_popup()
     local parent = vim.api.nvim_get_current_win()
     local tab_id = vim.api.nvim_get_current_tabpage()
 
-    if vim.tbl_contains(internal.list_coverable_windows(), parent) then
+    if not is_available(parent) then
         vim.api.nvim_err_writeln("[detour.nvim] This popup already has a child nested inside it:" .. parent)
-        return nil
+        return false
     end
 
     local parent_zindex = util.get_maybe_zindex(parent) or 0
     local window_opts = construct_nest(parent, parent_zindex + 1)
 
     local child = vim.api.nvim_open_win(vim.api.nvim_win_get_buf(0), true, window_opts)
-    internal.record_popup(child, { parent })
-    local augroup_id = vim.api.nvim_create_augroup(util.construct_augroup_name(child), {})
+    internal.popup_to_covered_windows[child] = { parent }
+    local augroup_id = vim.api.nvim_create_augroup(construct_augroup_name(child), {})
     vim.api.nvim_create_autocmd({"User"}, {
-        pattern = "DetourPopupResized"..util.stringify(parent),
+        pattern = "DetourPopupResized"..stringify(parent),
         group = augroup_id,
         callback = function ()
             if not util.is_open(child) then
@@ -250,19 +271,20 @@ local function popup_above_float()
     })
     -- We're running this to make sure initializing popups runs the same code path as updating popups
     -- We make sure to do this after all state and autocmds are set.
-    vim.cmd.doautocmd("User DetourPopupResized"..util.stringify(parent))
-    return child
+    resize_popup(child, window_opts)
+    return true
 end
 
 local function popup(bufnr, coverable_windows)
-    if util.is_floating(vim.api.nvim_get_current_win()) then
-        return popup_above_float()
+    local parent = vim.api.nvim_get_current_win()
+    if util.is_floating(parent) then
+        return nested_popup()
     end
     local tab_id = vim.api.nvim_get_current_tabpage()
     if coverable_windows == nil then
         coverable_windows = {}
         for _, window in ipairs(vim.api.nvim_tabpage_list_wins(tab_id)) do
-            if not util.is_floating(window) and not vim.tbl_contains(internal.list_coverable_windows(), window) then
+            if not util.is_floating(window) and is_available(window) then
                 table.insert(coverable_windows, window)
             end
         end
@@ -270,51 +292,39 @@ local function popup(bufnr, coverable_windows)
 
     if #coverable_windows == 0 then
         vim.api.nvim_err_writeln("[detour.nvim] No windows provided in coverable_windows.")
-        return nil
+        return false
     end
 
     for _, window in ipairs(coverable_windows) do
         if util.is_floating(window) then
             vim.api.nvim_err_writeln("[detour.nvim] No floating windows allowed in base (ie, non-nested) popup" .. window)
-            return nil
+            return false
         end
 
-        if vim.tbl_contains(internal.list_coverable_windows(), window) then
+        if not is_available(window) then
             vim.api.nvim_err_writeln("[detour.nvim] This window is already reserved by another popup:" .. window)
-            return nil
+            return false
         end
     end
 
-    -- We call handle_base_resize() later which overwrites the window_opts we set here, but this is still useful to validate that a popup can successfully be created at all.
     local window_opts = construct_window_opts(coverable_windows, tab_id)
     if window_opts == nil then
-        return nil
+        return false
     end
     local popup_id = vim.api.nvim_open_win(bufnr, true, window_opts)
-    internal.record_popup(popup_id, coverable_windows)
-    local augroup_id = vim.api.nvim_create_augroup(util.construct_augroup_name(popup_id), {})
-
-    local function handle_base_resize()
-        if not util.is_open(popup_id) then
-            teardownDetour(popup_id)
-            return
-        end
-        local new_window_opts = construct_window_opts(coverable_windows, tab_id)
-        -- Even if new_window_opts is nil, do not close the popup as it is being used by the user. Just leave it for the user to handle.
-        resize_popup(popup_id, new_window_opts)
-    end
-
-    vim.api.nvim_create_autocmd({"WinResized", "VimResized"}, {
+    internal.popup_to_covered_windows[popup_id] = coverable_windows
+    local augroup_id = vim.api.nvim_create_augroup(construct_augroup_name(popup_id), {})
+    vim.api.nvim_create_autocmd({"WinResized"}, {
         group = augroup_id,
         callback = function ()
             if not util.is_open(popup_id) then
                 teardownDetour(popup_id)
                 return
             end
-            -- WinResized populates vim.v.event.windows but VimResized does not so we default to listing all windows.
-            for _, x in ipairs(vim.v.event.windows or vim.api.nvim_tabpage_list_wins(tab_id)) do
+            for _, x in ipairs(vim.v.event.windows) do
                 if util.contains_element(vim.api.nvim_tabpage_list_wins(tab_id), x) then
-                    handle_base_resize()
+                    local new_window_opts = construct_window_opts(coverable_windows, tab_id)
+                    resize_popup(popup_id, new_window_opts)
                     break
                 end
             end
@@ -361,8 +371,8 @@ local function popup(bufnr, coverable_windows)
     end
     -- We're running this to make sure initializing popups runs the same code path as updating popups
     -- We make sure to do this after all state and autocmds are set.
-    handle_base_resize()
-    return popup_id
+    resize_popup(popup_id, window_opts)
+    return true
 end
 
 -- Neovim autocmd events are quite nuanced:
@@ -371,14 +381,12 @@ end
 -- 3. Even with `nested = true`, there is a limit to how many nested events Neovim will trigger (max depth is 10).
 -- Hence, there are possible cases where popup detours will be closed by the user's autocmds without triggering a WinClosed event. To address this, we must make sure to update the plugin's state before executing each user command. Also, we must double check what windows are still open during this plugin's autocmd callbacks.
 local function garbageCollect()
-    for _, popup_id in ipairs(internal.list_popups()) do
+    for _, popup_id in ipairs(vim.tbl_keys(internal.popup_to_covered_windows)) do -- storing keys in their own table just in case the changes to popup_to_covered_windows mess things up
         if not util.is_open(popup_id) then
             teardownDetour(popup_id)
         end
     end
 end
-
-assert(vim.fn.timer_start(300, vim.schedule_wrap(garbageCollect), { ['repeat'] = -1 }) ~= -1, "[detour.nvim] Failed to create garbageCollect timer.")
 
 M.Detour = function ()
     garbageCollect()

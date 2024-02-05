@@ -36,7 +36,6 @@ J.R.R. Tolkien, The Lord of the Rings
 { "carbon-steel/detour.nvim",
     config = function ()
        vim.keymap.set('n', '<c-w><enter>', ":Detour<cr>")
-       vim.keymap.set('n', '<c-w>.', ":DetourCurrentWindow<cr>")
    end
 },
 ```
@@ -54,10 +53,7 @@ Select a terminal buffer to open in a popup
 This is a simple example but there is a better keymap in `examples/telescope.md` that also opens a new terminal when no terminals are found.
 ```lua
 vim.keymap.set('n', '<leader>t', function()
-    local ok = require('detour').Detour() -- Open a detour popup
-    if not ok then
-        return
-    end
+    require('detour').Detour() -- Open a detour popup
 
     -- Switch to a blank buffer.
     -- This is a necessary precaution because the following call to telescope's
@@ -84,11 +80,7 @@ You can wrap any TUI in a popup. Here is an example.
 Run `top` in a popup:
 ```lua
 vim.keymap.set("n", '<leader>p', function ()
-    local ok = require('detour').Detour()  -- open a detour popup
-    if not ok then
-        return
-    end
-
+    require('detour').Detour()  -- open a detour popup
     vim.cmd.terminal('top')     -- open a terminal buffer
     vim.bo.bufhidden = 'delete' -- close the terminal when window closes
 
@@ -120,10 +112,7 @@ Run `tig` in a popup:
 ```lua
 vim.keymap.set('n', '<leader>g', function()
     local current_dir = vim.fn.expand("%:p:h")
-    local ok = require('detour').Detour() -- open a detour popup
-    if not ok then
-        return
-    end
+    require('detour').Detour() -- open a detour popup
 
     -- Set this window's current working directory to current file's directory.
     -- tig finds a git repo based on the current working directory. 
@@ -168,6 +157,3 @@ If your LSP movements (ex: `go-to-definition`) are opening locations in other wi
 
 Some colorschemes don't have visually clear floating window border colors. Consider customizing your colorscheme's FloatBorder to a color that makes your popups clearer.
 
-> I can't tell when my cursor is actually focuse on the window behind the popup and not the popup itself.
-
-This is a pain point that I'm going to release a fix for very soon. Until then, consider using a colorscheme that visually distinguishes between focused windows and unfocused windows. Aside from the plugin, this is just a good thing to have. You can customize your current colorscheme yourself. You'd just need to override `NormalNC` to have a different background than `Normal`.

@@ -45,7 +45,8 @@ describe("detour", function ()
         local right_base = vim.api.nvim_get_current_win()
 
         vim.fn.win_gotoid(middle_base)
-        local middle_popup = assert(detour.DetourCurrentWindow())
+        assert.True(detour.DetourCurrentWindow())
+        local middle_popup = vim.api.nvim_get_current_win()
 
         -- Enter and leave a popup from a base window in both directions
         movements.DetourWinCmdH()
@@ -61,7 +62,8 @@ describe("detour", function ()
         assert.same(vim.api.nvim_get_current_win(), middle_popup)
 
         -- Create nested popup
-        local middle_nested_popup = assert(detour.DetourCurrentWindow())
+        assert.True(detour.DetourCurrentWindow())
+        local middle_nested_popup = vim.api.nvim_get_current_win()
 
         -- Enter and leave a nested popup from a base window in both directions
         movements.DetourWinCmdH()
@@ -78,10 +80,12 @@ describe("detour", function ()
 
         -- Create popups on left and right
         vim.fn.win_gotoid(left_base)
-        local left_popup = assert(detour.DetourCurrentWindow())
+        assert.True(detour.DetourCurrentWindow())
+        local left_popup = vim.api.nvim_get_current_win()
 
         vim.fn.win_gotoid(right_base)
-        local right_popup = assert(detour.DetourCurrentWindow())
+        assert.True(detour.DetourCurrentWindow())
+        local right_popup = vim.api.nvim_get_current_win()
 
         vim.fn.win_gotoid(middle_nested_popup)
 
@@ -109,7 +113,8 @@ describe("detour", function ()
         local bottom_base = vim.api.nvim_get_current_win()
 
         vim.fn.win_gotoid(middle_base)
-        local middle_popup = assert(detour.DetourCurrentWindow())
+        assert.True(detour.DetourCurrentWindow())
+        local middle_popup = vim.api.nvim_get_current_win()
 
         -- Enter and leave a popup from a base window in both directions
         movements.DetourWinCmdK()
@@ -125,7 +130,8 @@ describe("detour", function ()
         assert.same(vim.api.nvim_get_current_win(), middle_popup)
 
         -- Create nested popup
-        local middle_nested_popup = assert(detour.DetourCurrentWindow())
+        assert.True(detour.DetourCurrentWindow())
+        local middle_nested_popup = vim.api.nvim_get_current_win()
 
         -- Enter and leave a nested popup from a base window in both directions
         movements.DetourWinCmdK()
@@ -142,10 +148,12 @@ describe("detour", function ()
 
         -- Create popups on top and bottom
         vim.fn.win_gotoid(top_base)
-        local top_popup = assert(detour.DetourCurrentWindow())
+        assert.True(detour.DetourCurrentWindow())
+        local top_popup = vim.api.nvim_get_current_win()
 
         vim.fn.win_gotoid(bottom_base)
-        local bottom_popup = assert(detour.DetourCurrentWindow())
+        assert.True(detour.DetourCurrentWindow())
+        local bottom_popup = vim.api.nvim_get_current_win()
 
         vim.fn.win_gotoid(middle_nested_popup)
 
