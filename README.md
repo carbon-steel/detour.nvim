@@ -162,12 +162,20 @@ end)
 
 > My LSP keeps moving my cursor to other windows.
 
-If your LSP movements (ex: `go-to-definition`) are opening locations in other windows, make sure that you're not calling these movements with the `reuse_win` set to `true`.
+If your LSP movements (ex: `go-to-definition`) are opening locations in other windows, make sure that `reuse_win` is set to `false`.
 
 > My popups don't look good.
 
 Some colorschemes don't have visually clear floating window border colors. Consider customizing your colorscheme's FloatBorder to a color that makes your popups clearer.
 
-> I can't tell when my cursor is actually focuse on the window behind the popup and not the popup itself.
+> I can't tell when my cursor is actually focused on the window behind the popup and not the popup itself.
 
 This is a pain point that I'm going to release a fix for very soon. Until then, consider using a colorscheme that visually distinguishes between focused windows and unfocused windows. Aside from the plugin, this is just a good thing to have. You can customize your current colorscheme yourself. You'd just need to override `NormalNC` to have a different background than `Normal`.
+
+> My TUI is slightly wider than the floating window it's in.
+
+This is something I noticed happening when I upgraded to Neovim 0.10. After you create your detour floating window, make sure to turn off `signcolumn`.
+
+```lua
+vim.opt.signcolumn = "no"
+```
