@@ -54,8 +54,8 @@ Select a terminal buffer to open in a popup
 This is a simple example but there is a better keymap in `examples/telescope.md` that also opens a new terminal when no terminals are found.
 ```lua
 vim.keymap.set('n', '<leader>t', function()
-    local ok = require('detour').Detour() -- Open a detour popup
-    if not ok then
+    local popup_id = require('detour').Detour() -- Open a detour popup
+    if not popup_id then
         return
     end
 
@@ -67,6 +67,7 @@ vim.keymap.set('n', '<leader>t', function()
     -- with.
     vim.cmd.enew()
     vim.bo.bufhidden = 'delete' -- delete this scratch buffer when we move out of it
+    vim.wo[popup_id].signcolumn = "no"
 
     require('telescope.builtin').buffers({})    -- Open telescope prompt
     vim.api.nvim_feedkeys("term://", "n", true) -- popuplate prompt with "term"
@@ -84,13 +85,14 @@ You can wrap any TUI in a popup. Here is an example.
 Run `top` in a popup:
 ```lua
 vim.keymap.set("n", '<leader>p', function ()
-    local ok = require('detour').Detour()  -- open a detour popup
-    if not ok then
+    local popup_id = require('detour').Detour()  -- open a detour popup
+    if not popup_id then
         return
     end
 
     vim.cmd.terminal('top')     -- open a terminal buffer
     vim.bo.bufhidden = 'delete' -- close the terminal when window closes
+    vim.wo[popup_id].signcolumn = "no" -- In Neovim 0.10, the signcolumn can push the TUI a bit out of window
 
     -- It's common for people to have `<Esc>` mapped to `<C-\><C-n>` for terminals.
     -- This can get in the way when interacting with TUIs.
@@ -120,8 +122,8 @@ Run `tig` in a popup:
 ```lua
 vim.keymap.set('n', '<leader>g', function()
     local current_dir = vim.fn.expand("%:p:h")
-    local ok = require('detour').Detour() -- open a detour popup
-    if not ok then
+    local popup_id = require('detour').Detour() -- open a detour popup
+    if not popup_id then
         return
     end
 
@@ -131,6 +133,7 @@ vim.keymap.set('n', '<leader>g', function()
 
     vim.cmd.terminal('tig')     -- open a terminal buffer running tig
     vim.bo.bufhidden = 'delete' -- close the terminal when window closes
+    vim.wo[popup_id].signcolumn = "no" -- In Neovim 0.10, the signcolumn can push the TUI a bit out of window
 
     -- It's common for people to have `<Esc>` mapped to `<C-\><C-n>` for terminals.
     -- This can get in the way when interacting with TUIs.
