@@ -178,23 +178,40 @@ local function teardownDetour(window_id)
 end
 
 local function resize_popup(window_id, new_window_opts)
-    if new_window_opts ~= nil then
-        local current_window_opts = vim.api.nvim_win_get_config(window_id)
-        vim.api.nvim_win_set_config(window_id, vim.tbl_extend("force", current_window_opts, new_window_opts))
+	if new_window_opts == nil then
+		return
+	end
 
-        for _, covered_window in ipairs(internal.get_coverable_windows(window_id)) do
-            if util.is_floating(covered_window) then
-                vim.api.nvim_win_set_config(
-                    covered_window,
-                    vim.tbl_extend("force",
-                                   vim.api.nvim_win_get_config(covered_window),
-                                   { focusable = not util.overlap(covered_window, window_id) }))
-            end
-        end
+	local current_window_opts = vim.api.nvim_win_get_config(window_id)
+	vim.api.nvim_win_set_config(window_id, vim.tbl_extend("force", current_window_opts, new_window_opts))
 
-        -- Fully complete resizing before propogating event.
-        vim.cmd.doautocmd("User DetourPopupResized"..util.stringify(window_id))
-    end
+	for _, covered_window in ipairs(internal.get_coverable_windows(window_id)) do
+		if util.is_floating(covered_window) then
+			vim.api.nvim_win_set_config(
+				covered_window,
+				vim.tbl_extend(
+					"force",
+					vim.api.nvim_win_get_config(covered_window),
+					{ focusable = not util.overlap(covered_window, window_id) }
+				)
+			)
+		end
+	end
+
+	-- Sometimes, resizing terminal buffers can end up scrolling the terminal UI
+	-- horizontally so that you only see a portion of the terminal UI. This code
+	-- scrolls the terminal UI so that
+	--
+	-- Condition on terminal mode (instead of checking whether buffer is
+	-- terminal-type) just in case user was intentionally looking at a specific
+	-- location in visual or normal mode.
+	if vim.fn.mode() == "t" then
+		local row, _ = unpack(vim.api.nvim_win_get_position(window_id))
+		vim.api.nvim_win_set_cursor(window_id, { row, 0 })
+	end
+
+	-- Fully complete resizing before propogating event.
+	vim.cmd.doautocmd("User DetourPopupResized" .. util.stringify(window_id))
 end
 
 local function popup_above_float()
