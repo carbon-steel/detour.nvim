@@ -24,6 +24,17 @@ end
 
 function M.ShowPathInTitle(popup_id)
 	require("detour.show_path_in_title")
+
+	if
+		next(vim.api.nvim_get_autocmds({
+			pattern = "DetourUpdateTitle" .. util.stringify(popup_id),
+			group = util.construct_augroup_name(popup_id),
+		})) ~= nil
+	then
+		-- ShowPathInTitle already called for this popup.
+		return
+	end
+
 	update_title(popup_id)
 
 	vim.api.nvim_create_autocmd({ "User" }, {

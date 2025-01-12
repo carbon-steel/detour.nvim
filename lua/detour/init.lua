@@ -4,8 +4,11 @@ local util = require("detour.util")
 
 local internal = require("detour.internal")
 
+local title_config = "path"
+
 -- This plugin utilizes custom User events:
--- * User DetourPopupResized<id>: This event is triggered whenever a detour popup is resized. The event pattern has the window's ID concatenated to it.
+-- * User DetourPopupResized<id>: This event is triggered whenever a detour popup is resized. The event pattern has the
+-- window's ID concatenated to it.
 
 local function is_statusline_global()
 	if vim.o.laststatus == 3 then
@@ -68,9 +71,11 @@ local function construct_window_opts(coverable_windows, tab_id)
 				local uncoverable_top, uncoverable_bottom, uncoverable_left, uncoverable_right =
 					util.get_text_area_dimensions(uncoverable_window)
 				if not is_statusline_global() then -- we have to worry about statuslines
-					-- The fact that we're starting with text area dimensions means that all of the rectangles we are working with do not include statuslines.
-					-- This means that we need to avoid inadvertantly covering a window's status line.
-					-- Neovim can be configured to only show statuslines when there are multiple windows on the screen but we can ignore that because this loop only runs when there are multiple windows on the screen.
+					-- The fact that we're starting with text area dimensions means that all of the rectangles we are
+					-- working with do not include statuslines. This means that we need to avoid inadvertantly covering
+					-- a window's status line. Neovim can be configured to only show statuslines when there are multiple
+					-- windows on the screen but we can ignore that because this loop only runs when there are multiple
+					-- windows on the screen.
 					uncoverable_top = uncoverable_top - 1 -- don't cover above window's statusline
 					uncoverable_bottom = uncoverable_bottom + 1 -- don't cover this window's statusline
 				end
@@ -79,10 +84,6 @@ local function construct_window_opts(coverable_windows, tab_id)
 				local rightest_left = math.max(left, uncoverable_left)
 				local leftest_right = math.min(right, uncoverable_right)
 				if (lowest_top < highest_bottom) and (rightest_left < leftest_right) then
-					--print("(" .. top .. "," .. left .. ")x(" .. bottom .. "," .. right .. ")")
-					--print("vs (" .. uncoverable_top .. "," .. uncoverable_left .. ")x(" .. uncoverable_bottom .. "," .. uncoverable_right .. ")")
-
-					--print("illegal!")
 					legal = false
 				end
 			end
@@ -268,6 +269,9 @@ local function popup_above_float()
 	-- We're running this to make sure initializing popups runs the same code path as updating popups
 	-- We make sure to do this after all state and autocmds are set.
 	vim.cmd.doautocmd("User DetourPopupResized" .. util.stringify(parent))
+	if title_config == "path" then
+		require("detour.features").ShowPathInTitle(child)
+	end
 	return child
 end
 
@@ -381,6 +385,11 @@ local function popup(bufnr, coverable_windows)
 	-- We're running this to make sure initializing popups runs the same code path as updating popups
 	-- We make sure to do this after all state and autocmds are set.
 	handle_base_resize()
+
+	if title_config == "path" then
+		require("detour.features").ShowPathInTitle(popup_id)
+	end
+
 	return popup_id
 end
 
@@ -388,7 +397,9 @@ end
 -- 1. Autocmds do not trigger autocmd events by default (you need to set `nested = true` to do that).
 -- 2. WinClosed autocmds do not trigger WinClosed events even if `nested = true`.
 -- 3. Even with `nested = true`, there is a limit to how many nested events Neovim will trigger (max depth is 10).
--- Hence, there are possible cases where popup detours will be closed by the user's autocmds without triggering a WinClosed event. To address this, we must make sure to update the plugin's state before executing each user command. Also, we must double check what windows are still open during this plugin's autocmd callbacks.
+-- Hence, there are possible cases where popup detours will be closed by the user's autocmds without triggering a
+-- WinClosed event. To address this, we must make sure to update the plugin's state before executing each user command.
+-- Also, we must double check what windows are still open during this plugin's autocmd callbacks.
 local function garbageCollect()
 	for _, popup_id in ipairs(internal.list_popups()) do
 		if not util.is_open(popup_id) then
