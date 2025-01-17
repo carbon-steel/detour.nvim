@@ -24,7 +24,7 @@ function M.teardown_detour(window_id)
 			)
 		end
 	end
-	M.erase_popup(window_id)
+	popup_to_coverable_windows[window_id] = nil
 end
 
 function M.get_coverable_windows(popup_id)
@@ -37,10 +37,6 @@ function M.get_coverable_windows(popup_id)
 		return vim.tbl_contains(vim.api.nvim_list_wins(), window_id)
 	end, popup_to_coverable_windows[popup_id])
 
-	assert(
-		#popup_to_coverable_windows[popup_id] > 0,
-		"[detour.nvim] Popups should always have at least one coverable window. This may indicate that this popup needs to be closed."
-	)
 	return popup_to_coverable_windows[popup_id]
 end
 
@@ -60,16 +56,14 @@ function M.record_popup(popup_id, coverable_windows)
 	return true
 end
 
-function M.erase_popup(popup_id)
-	popup_to_coverable_windows[popup_id] = nil
-end
-
 function M.list_popups()
 	return vim.tbl_keys(popup_to_coverable_windows)
 end
 
 function M.list_coverable_windows()
-	return vim.tbl_flatten(vim.tbl_values(popup_to_coverable_windows))
+	return vim.tbl_filter(function(window)
+		return vim.tbl_contains(vim.api.nvim_list_wins(), window)
+	end, vim.tbl_flatten(vim.tbl_values(popup_to_coverable_windows)))
 end
 
 -- Neovim autocmd events are quite nuanced:
