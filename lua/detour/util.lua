@@ -71,7 +71,10 @@ local function overlap_helper(positions_a, positions_b)
 end
 
 function M.overlap(window_a, window_b)
-	return overlap_helper({ M.get_text_area_dimensions(window_a) }, { M.get_text_area_dimensions(window_b) })
+	return overlap_helper(
+		{ M.get_text_area_dimensions(window_a) },
+		{ M.get_text_area_dimensions(window_b) }
+	)
 end
 
 function M.find_top_popup()
@@ -94,9 +97,12 @@ function M.find_covered_bases(window_id)
 	local temp_id = window_id
 	local coverable_bases = nil
 	while internal.get_coverable_windows(temp_id) do
-		coverable_bases = internal.get_coverable_windows(temp_id)
+		coverable_bases = internal.get_coverable_windows(temp_id) or {}
 		if #coverable_bases == 0 then
-			assert(false, "[detour.nvim] There should never be an empty array in popup_to_covered_windows.")
+			assert(
+				false,
+				"[detour.nvim] There should never be an empty array in popup_to_covered_windows."
+			)
 		end
 		-- We iterate on only the first covered window because there are two cases:
 		-- A: there is exactly one covered window and it's another detour.
