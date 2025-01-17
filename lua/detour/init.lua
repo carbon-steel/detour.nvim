@@ -33,26 +33,6 @@ local function construct_nest(parent, layer)
 	}
 end
 
--- Needs to be idempotent
-local function teardownDetour(window_id)
-	vim.api.nvim_del_augroup_by_name(util.construct_augroup_name(window_id))
-	for _, covered_window in
-		ipairs(internal.get_coverable_windows(window_id) or {})
-	do
-		if util.is_floating(covered_window) then
-			vim.api.nvim_win_set_config(
-				covered_window,
-				vim.tbl_extend(
-					"force",
-					vim.api.nvim_win_get_config(covered_window),
-					{ focusable = true }
-				)
-			)
-		end
-	end
-	internal.erase_popup(window_id)
-end
-
 local function resize_popup(window_id, new_window_opts)
 	if new_window_opts == nil then
 		return
@@ -114,13 +94,13 @@ local function popup_above_float()
 		vim.api.nvim_open_win(vim.api.nvim_win_get_buf(0), true, window_opts)
 	internal.record_popup(child, { parent })
 	local augroup_id =
-		vim.api.nvim_create_augroup(util.construct_augroup_name(child), {})
+		vim.api.nvim_create_augroup(internal.construct_augroup_name(child), {})
 	vim.api.nvim_create_autocmd({ "User" }, {
 		pattern = "DetourPopupResized" .. util.stringify(parent),
 		group = augroup_id,
 		callback = function()
 			if not util.is_open(child) then
-				teardownDetour(child)
+				internal.teardown_detour(child)
 				return
 			end
 			local new_window_opts = construct_nest(parent)
@@ -131,7 +111,7 @@ local function popup_above_float()
 		group = augroup_id,
 		pattern = "" .. child,
 		callback = function()
-			teardownDetour(child)
+			internal.teardown_detour(child)
 			if
 				vim.tbl_contains(vim.api.nvim_tabpage_list_wins(tab_id), parent)
 			then
@@ -145,7 +125,7 @@ local function popup_above_float()
 		pattern = "" .. parent,
 		callback = function()
 			if not util.is_open(child) then
-				teardownDetour(child)
+				internal.teardown_detour(child)
 				return
 			end
 			vim.api.nvim_win_close(child, false)
@@ -215,11 +195,11 @@ local function popup(bufnr, coverable_windows)
 	local popup_id = vim.api.nvim_open_win(bufnr, true, window_opts)
 	internal.record_popup(popup_id, coverable_windows)
 	local augroup_id =
-		vim.api.nvim_create_augroup(util.construct_augroup_name(popup_id), {})
+		vim.api.nvim_create_augroup(internal.construct_augroup_name(popup_id), {})
 
 	local function handle_base_resize()
 		if not util.is_open(popup_id) then
-			teardownDetour(popup_id)
+			internal.teardown_detour(popup_id)
 			return
 		end
 		local new_window_opts =
@@ -232,7 +212,7 @@ local function popup(bufnr, coverable_windows)
 		group = augroup_id,
 		callback = function()
 			if not util.is_open(popup_id) then
-				teardownDetour(popup_id)
+				internal.teardown_detour(popup_id)
 				return
 			end
 			-- WinResized populates vim.v.event.windows but VimResized does not so we default to listing all windows.
@@ -258,7 +238,7 @@ local function popup(bufnr, coverable_windows)
 		group = augroup_id,
 		pattern = "" .. popup_id,
 		callback = function()
-			teardownDetour(popup_id)
+			internal.teardown_detour(popup_id)
 			for _, base in ipairs(coverable_windows) do
 				if
 					vim.tbl_contains(
@@ -279,7 +259,7 @@ local function popup(bufnr, coverable_windows)
 			pattern = "" .. triggering_window,
 			callback = function()
 				if not util.is_open(popup_id) then
-					teardownDetour(popup_id)
+					internal.teardown_detour(popup_id)
 					return
 				end
 				local all_closed = true
@@ -312,37 +292,13 @@ local function popup(bufnr, coverable_windows)
 	return popup_id
 end
 
--- Neovim autocmd events are quite nuanced:
--- 1. Autocmds do not trigger autocmd events by default (you need to set `nested = true` to do that).
--- 2. WinClosed autocmds do not trigger WinClosed events even if `nested = true`.
--- 3. Even with `nested = true`, there is a limit to how many nested events Neovim will trigger (max depth is 10).
--- Hence, there are possible cases where popup detours will be closed by the user's autocmds without triggering a
--- WinClosed event. To address this, we must make sure to update the plugin's state before executing each user command.
--- Also, we must double check what windows are still open during this plugin's autocmd callbacks.
-local function garbageCollect()
-	for _, popup_id in ipairs(internal.list_popups()) do
-		if not util.is_open(popup_id) then
-			teardownDetour(popup_id)
-		end
-	end
-end
-
-assert(
-	vim.fn.timer_start(
-		300,
-		vim.schedule_wrap(garbageCollect),
-		{ ["repeat"] = -1 }
-	) ~= -1,
-	"[detour.nvim] Failed to create garbageCollect timer."
-)
-
 M.Detour = function()
-	garbageCollect()
+	internal.garbage_collect()
 	return popup(vim.api.nvim_get_current_buf())
 end
 
 M.DetourCurrentWindow = function()
-	garbageCollect()
+	internal.garbage_collect()
 	return popup(
 		vim.api.nvim_get_current_buf(),
 		{ vim.api.nvim_get_current_win() }

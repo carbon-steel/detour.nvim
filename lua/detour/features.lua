@@ -1,6 +1,7 @@
 local M = {}
 
 local util = require("detour.util")
+local internal = require("detour.internal")
 
 local function update_title(window_id)
 	-- Assumption: window_id is not closed as this was triggered from the fact that we are redrawing this window.
@@ -18,7 +19,11 @@ local function update_title(window_id)
 	end
 	vim.api.nvim_win_set_config(
 		window_id,
-		vim.tbl_extend("force", vim.api.nvim_win_get_config(window_id), { title = title })
+		vim.tbl_extend(
+			"force",
+			vim.api.nvim_win_get_config(window_id),
+			{ title = title }
+		)
 	)
 end
 
@@ -28,7 +33,7 @@ function M.ShowPathInTitle(popup_id)
 	if
 		next(vim.api.nvim_get_autocmds({
 			pattern = "DetourUpdateTitle" .. util.stringify(popup_id),
-			group = util.construct_augroup_name(popup_id),
+			group = internal.construct_augroup_name(popup_id),
 		})) ~= nil
 	then
 		-- ShowPathInTitle already called for this popup.
@@ -39,7 +44,7 @@ function M.ShowPathInTitle(popup_id)
 
 	vim.api.nvim_create_autocmd({ "User" }, {
 		pattern = "DetourUpdateTitle" .. util.stringify(popup_id),
-		group = util.construct_augroup_name(popup_id),
+		group = internal.construct_augroup_name(popup_id),
 		callback = function()
 			update_title(popup_id)
 		end,
@@ -49,7 +54,7 @@ end
 function M.CloseOnLeave(popup_id)
 	-- This autocmd will close the created detour popup when you focus on a different window.
 	vim.api.nvim_create_autocmd({ "WinEnter" }, {
-		group = util.construct_augroup_name(popup_id),
+		group = internal.construct_augroup_name(popup_id),
 		callback = function()
 			local curr_window = vim.api.nvim_get_current_win()
 			-- Skip cases where we are entering popups (eg, menus, nested popups, the detour popup itself).
