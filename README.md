@@ -37,9 +37,12 @@ J.R.R. Tolkien, The Lord of the Rings
 ```lua
 { "carbon-steel/detour.nvim",
     config = function ()
-       vim.keymap.set('n', '<c-w><enter>', ":Detour<cr>")
-       vim.keymap.set('n', '<c-w>.', ":DetourCurrentWindow<cr>")
-   end
+        require("detour").setup({
+            -- Put custom configuration here
+        })
+        vim.keymap.set('n', '<c-w><enter>', ":Detour<cr>")
+        vim.keymap.set('n', '<c-w>.', ":DetourCurrentWindow<cr>")
+    end
 },
 ```
 
@@ -166,6 +169,12 @@ end)
 |:--:|
 | **Use keymap above -> Close window** |
 | ![tig2](https://github.com/carbon-steel/detour.nvim/assets/7697639/7dd84b42-26d8-487b-8486-aa08e0fef5c8) |
+
+# Options
+
+| Option  | Description                                                                                 | Default value |
+| --      | --                                                                                          | --            |
+| `title` | "path" sets the path of the current buffer as the title of the float. "none" sets no title. | "path"        |
 
 # FAQ
 
