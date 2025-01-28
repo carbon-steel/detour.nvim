@@ -120,7 +120,11 @@ local function popup_above_float()
 			if
 				vim.tbl_contains(vim.api.nvim_tabpage_list_wins(tab_id), parent)
 			then
-				vim.fn.win_gotoid(parent)
+				vim.schedule( -- schedule to avoid any trickiness with nested autocmd events.
+					function()
+						vim.fn.win_gotoid(parent)
+					end
+				)
 			end
 		end,
 	})
@@ -251,7 +255,11 @@ local function popup(bufnr, coverable_windows)
 						base
 					)
 				then
-					vim.fn.win_gotoid(base)
+					vim.schedule( -- schedule to avoid any trickiness with nested autocmd events.
+						function()
+							vim.fn.win_gotoid(base)
+						end
+					)
 					return
 				end
 			end
