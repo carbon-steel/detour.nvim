@@ -3,7 +3,7 @@ local M = {}
 local util = require("detour.util")
 local internal = require("detour.internal")
 local algo = require("detour.windowing_algorithm")
-local settings = require("detour.config").options
+local settings = require("detour.config")
 
 -- This plugin utilizes custom User events:
 -- * User DetourPopupResized<id>: This event is triggered whenever a detour
@@ -145,7 +145,7 @@ local function popup_above_float()
 	-- We're running this to make sure initializing popups runs the same code path as updating popups
 	-- We make sure to do this after all state and autocmds are set.
 	vim.cmd.doautocmd("User DetourPopupResized" .. util.stringify(parent))
-	if settings.title == "path" then
+	if settings.options.title == "path" then
 		require("detour.features").ShowPathInTitle(child)
 	end
 	return child
@@ -298,7 +298,7 @@ local function popup(bufnr, coverable_windows)
 	-- We make sure to do this after all state and autocmds are set.
 	handle_base_resize()
 
-	if settings.title == "path" then
+	if settings.options.title == "path" then
 		require("detour.features").ShowPathInTitle(popup_id)
 	end
 
