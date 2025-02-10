@@ -153,7 +153,9 @@ describe("detour", function()
 	end)
 
 	it("react to a coverable window closing", function()
-		pending("WinResized doesn't seem to work when running nvim as a command.")
+		pending(
+			"WinResized doesn't seem to work when running nvim as a command."
+		)
 		vim.cmd.wincmd("v")
 		local coverable_window = vim.api.nvim_get_current_win()
 		local popup = assert(detour.Detour())
@@ -191,17 +193,26 @@ describe("detour", function()
 		assert.same(Set({ win, popup }), Set(vim.api.nvim_tabpage_list_wins(0)))
 	end)
 
-	it("Do not allow two 'current window' popups over the same window", function()
-		local win = vim.api.nvim_get_current_win()
-		local popup = assert(detour.DetourCurrentWindow())
-		vim.fn.win_gotoid(win)
-		assert.Nil(detour.DetourCurrentWindow())
-		assert.same(Set({ win, popup }), Set(vim.api.nvim_tabpage_list_wins(0)))
+	it(
+		"Do not allow two 'current window' popups over the same window",
+		function()
+			local win = vim.api.nvim_get_current_win()
+			local popup = assert(detour.DetourCurrentWindow())
+			vim.fn.win_gotoid(win)
+			assert.Nil(detour.DetourCurrentWindow())
+			assert.same(
+				Set({ win, popup }),
+				Set(vim.api.nvim_tabpage_list_wins(0))
+			)
 
-		vim.fn.win_gotoid(win)
-		assert.Nil(detour.Detour())
-		assert.same(Set({ win, popup }), Set(vim.api.nvim_tabpage_list_wins(0)))
-	end)
+			vim.fn.win_gotoid(win)
+			assert.Nil(detour.Detour())
+			assert.same(
+				Set({ win, popup }),
+				Set(vim.api.nvim_tabpage_list_wins(0))
+			)
+		end
+	)
 
 	it("Switch focus to a popup's floating parent when it's closed", function()
 		vim.api.nvim_open_win(
@@ -215,7 +226,10 @@ describe("detour", function()
 			table.insert(wins, detour.Detour())
 			for j, win in ipairs(wins) do
 				assert(win)
-				assert.same(vim.api.nvim_win_get_config(win).focusable, j == #wins)
+				assert.same(
+					vim.api.nvim_win_get_config(win).focusable,
+					j == #wins
+				)
 			end
 		end
 
@@ -224,7 +238,10 @@ describe("detour", function()
 			table.remove(wins, #wins)
 			assert.same(vim.api.nvim_get_current_win(), wins[#wins])
 			for j, win in ipairs(wins) do
-				assert.same(vim.api.nvim_win_get_config(win).focusable, j == #wins)
+				assert.same(
+					vim.api.nvim_win_get_config(win).focusable,
+					j == #wins
+				)
 			end
 		end
 	end)
@@ -236,7 +253,10 @@ describe("detour", function()
 			for j, win in ipairs(wins) do
 				assert(win)
 				if j > 1 then -- the base window cannot be unfocusable
-					assert.same(vim.api.nvim_win_get_config(win).focusable, j == #wins)
+					assert.same(
+						vim.api.nvim_win_get_config(win).focusable,
+						j == #wins
+					)
 				end
 			end
 		end
@@ -247,7 +267,10 @@ describe("detour", function()
 			assert.same(vim.api.nvim_get_current_win(), wins[#wins])
 			for j, win in ipairs(wins) do
 				if j > 1 then -- the base window cannot be unfocusable
-					assert.same(vim.api.nvim_win_get_config(win).focusable, j == #wins)
+					assert.same(
+						vim.api.nvim_win_get_config(win).focusable,
+						j == #wins
+					)
 				end
 			end
 		end
@@ -260,21 +283,26 @@ describe("detour", function()
 		assert.same(vim.api.nvim_get_current_win(), popup)
 	end)
 
-	it("Handle cases when popups close without throwing a WinClosed event", function()
-		pending("WinResized doesn't seem to work when running nvim as a command.")
-		vim.cmd.vsplit()
-		local popup = assert(detour.DetourCurrentWindow())
-		vim.api.nvim_create_autocmd({ "WinLeave" }, {
-			callback = function()
-				vim.api.nvim_win_close(0, true)
-				return true
-			end,
-		})
-		vim.cmd.wincmd("h")
-		assert.False(util.is_open(popup))
-		vim.cmd.wincmd("l")
-		assert(detour.DetourCurrentWindow())
-	end)
+	it(
+		"Handle cases when popups close without throwing a WinClosed event",
+		function()
+			pending(
+				"WinResized doesn't seem to work when running nvim as a command."
+			)
+			vim.cmd.vsplit()
+			local popup = assert(detour.DetourCurrentWindow())
+			vim.api.nvim_create_autocmd({ "WinLeave" }, {
+				callback = function()
+					vim.api.nvim_win_close(0, true)
+					return true
+				end,
+			})
+			vim.cmd.wincmd("h")
+			assert.False(util.is_open(popup))
+			vim.cmd.wincmd("l")
+			assert(detour.DetourCurrentWindow())
+		end
+	)
 
 	it("Test CloseOnLeave", function()
 		local popup_id = assert(detour.Detour())
@@ -293,10 +321,16 @@ describe("detour", function()
 	it("Test ShowPathInTitle", function()
 		vim.cmd.file("/tmp/detour_test_a")
 		local popup_id = assert(detour.Detour())
-		assert.same("/tmp/detour_test_a", vim.api.nvim_win_get_config(0).title[1][1])
+		assert.same(
+			"/tmp/detour_test_a",
+			vim.api.nvim_win_get_config(0).title[1][1]
+		)
 		vim.cmd.file("/tmp/detour_test_b")
 		-- Simulate the event triggered by the `on_win` decorator
 		vim.cmd.doautocmd("User DetourUpdateTitle" .. util.stringify(popup_id))
-		assert.same("/tmp/detour_test_b", vim.api.nvim_win_get_config(0).title[1][1])
+		assert.same(
+			"/tmp/detour_test_b",
+			vim.api.nvim_win_get_config(0).title[1][1]
+		)
 	end)
 end)
