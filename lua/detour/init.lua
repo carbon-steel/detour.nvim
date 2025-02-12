@@ -123,6 +123,9 @@ local function popup_above_float()
 				vim.schedule( -- schedule to avoid any trickiness with nested autocmd events.
 					function()
 						vim.fn.win_gotoid(parent)
+						if vim.g.detour_testing then
+							vim.cmd.doautocmd("User DetourGoTo" .. parent)
+						end
 					end
 				)
 			end
@@ -258,6 +261,9 @@ local function popup(bufnr, coverable_windows)
 					vim.schedule( -- schedule to avoid any trickiness with nested autocmd events.
 						function()
 							vim.fn.win_gotoid(base)
+							if vim.g.detour_testing then
+								vim.cmd.doautocmd("User DetourGoTo" .. base)
+							end
 						end
 					)
 					return

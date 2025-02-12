@@ -12,6 +12,7 @@ end
 
 describe("detour", function()
 	before_each(function()
+		vim.g.detour_testing = true
 		vim.cmd([[
         %bwipeout!
         mapclear
@@ -234,8 +235,19 @@ describe("detour", function()
 		end
 
 		for _ = 1, 10 do
-			vim.cmd.close()
 			table.remove(wins, #wins)
+			local done = false
+			vim.api.nvim_create_autocmd("User", {
+				pattern = "DetourGoTo" .. wins[#wins],
+				callback = function()
+					done = true
+				end,
+				once = true,
+			})
+			vim.cmd.close()
+			assert(vim.wait(10, function()
+				return done
+			end))
 			assert.same(vim.api.nvim_get_current_win(), wins[#wins])
 			for j, win in ipairs(wins) do
 				assert.same(
@@ -262,8 +274,19 @@ describe("detour", function()
 		end
 
 		for _ = 1, 10 do
-			vim.cmd.close()
 			table.remove(wins, #wins)
+			local done = false
+			vim.api.nvim_create_autocmd("User", {
+				pattern = "DetourGoTo" .. wins[#wins],
+				callback = function()
+					done = true
+				end,
+				once = true,
+			})
+			vim.cmd.close()
+			assert(vim.wait(10, function()
+				return done
+			end))
 			assert.same(vim.api.nvim_get_current_win(), wins[#wins])
 			for j, win in ipairs(wins) do
 				if j > 1 then -- the base window cannot be unfocusable
