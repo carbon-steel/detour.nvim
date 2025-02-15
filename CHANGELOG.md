@@ -14,3 +14,7 @@
     - [Commit](https://github.com/carbon-steel/detour.nvim/commit/a7935ce1283a141bcca09d6bdf07c9c1b537bbfb)
 * Redid help detour example
     - [Commit](https://github.com/carbon-steel/detour.nvim/commit/bf59c29a06b58cd0e9f53b04aad7646204af4479)
+
+### Changed
+
+* Removed behavior that closes detour if its parents are closed.
