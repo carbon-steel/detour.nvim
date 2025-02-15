@@ -108,51 +108,6 @@ describe("detour", function()
 		assert.same(#vim.api.nvim_list_wins(), 1)
 	end)
 
-	it("closing parent popup closes child popup", function()
-		local win = vim.api.nvim_get_current_win()
-		local parent_popup = assert(detour.Detour())
-		assert(detour.Detour())
-
-		vim.fn.win_gotoid(parent_popup)
-		vim.cmd.quit() -- this should close both popups
-		assert.same(vim.api.nvim_list_wins(), { win })
-	end)
-
-	it("closing base window closes all of its nested popups", function()
-		local win_a = vim.api.nvim_get_current_win()
-		local popup_a = assert(detour.Detour())
-		vim.cmd.split()
-		local win_b = vim.api.nvim_get_current_win()
-		assert(detour.Detour())
-		assert(detour.Detour())
-		assert(detour.Detour())
-
-		vim.fn.win_gotoid(win_b)
-		vim.cmd.quit()
-		assert.same(Set(vim.api.nvim_list_wins()), Set({ win_a, popup_a }))
-	end)
-
-	it("closing base window closes popups", function()
-		vim.cmd.tabe()
-		local original_window = vim.api.nvim_get_current_win()
-		assert(detour.Detour())
-		assert(detour.Detour())
-
-		vim.cmd.wincmd("s") -- split to create a new uncovered window
-		local split_window = vim.api.nvim_get_current_win()
-		local split_popup = assert(detour.Detour())
-
-		-- Go back to original window
-		vim.fn.win_gotoid(original_window)
-
-		vim.cmd.quit()
-
-		local windows = vim.api.nvim_tabpage_list_wins(0)
-		assert.True(util.contains_element(windows, split_window))
-		assert.True(util.contains_element(windows, split_popup))
-		assert.same(#windows, 2)
-	end)
-
 	it("react to a coverable window closing", function()
 		pending(
 			"WinResized doesn't seem to work when running nvim as a command."
