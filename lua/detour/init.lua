@@ -155,10 +155,6 @@ local function popup_above_float()
 end
 
 local function popup(bufnr, coverable_windows)
-	if util.is_floating(vim.api.nvim_get_current_win()) then
-		return popup_above_float()
-	end
-
 	local tab_id = vim.api.nvim_get_current_tabpage()
 	if coverable_windows == nil then
 		coverable_windows = vim.tbl_filter(function(window)
@@ -313,11 +309,20 @@ end
 
 M.Detour = function()
 	internal.garbage_collect()
+	if util.is_floating(vim.api.nvim_get_current_win()) then
+		return popup_above_float()
+	end
+
 	return popup(vim.api.nvim_get_current_buf())
 end
 
 M.DetourCurrentWindow = function()
 	internal.garbage_collect()
+
+	if util.is_floating(vim.api.nvim_get_current_win()) then
+		return popup_above_float()
+	end
+
 	return popup(
 		vim.api.nvim_get_current_buf(),
 		{ vim.api.nvim_get_current_win() }
