@@ -132,20 +132,8 @@ local function popup_above_float()
 		end,
 	})
 
-	vim.api.nvim_create_autocmd({ "WinClosed" }, {
-		group = augroup_id,
-		pattern = "" .. parent,
-		callback = function()
-			if not util.is_open(child) then
-				internal.teardown_detour(child)
-				return
-			end
-			vim.api.nvim_win_close(child, false)
-			-- Even if `nested` is set to true, WinClosed does not trigger itself.
-			vim.cmd.doautocmd("WinClosed " .. child)
-		end,
-	})
-	-- We're running this to make sure initializing popups runs the same code path as updating popups
+	-- We're running this to make sure initializing popups runs the same code
+	-- path as updating popups
 	-- We make sure to do this after all state and autocmds are set.
 	vim.cmd.doautocmd("User DetourPopupResized" .. util.stringify(parent))
 	if settings.options.title == "path" then
@@ -223,7 +211,8 @@ local function popup(bufnr, coverable_windows)
 				internal.teardown_detour(popup_id)
 				return
 			end
-			-- WinResized populates vim.v.event.windows but VimResized does not so we default to listing all windows.
+			-- WinResized populates vim.v.event.windows but VimResized does not
+			-- so we default to listing all windows.
 			for _, x in
 				ipairs(
 					vim.v.event.windows
@@ -231,10 +220,7 @@ local function popup(bufnr, coverable_windows)
 				)
 			do
 				if
-					util.contains_element(
-						vim.api.nvim_tabpage_list_wins(tab_id),
-						x
-					)
+					vim.list_contains(vim.api.nvim_tabpage_list_wins(tab_id), x)
 				then
 					handle_base_resize()
 					break
@@ -268,36 +254,9 @@ local function popup(bufnr, coverable_windows)
 		end,
 	})
 
-	for _, triggering_window in ipairs(coverable_windows) do
-		vim.api.nvim_create_autocmd({ "WinClosed" }, {
-			group = augroup_id,
-			pattern = "" .. triggering_window,
-			callback = function()
-				if not util.is_open(popup_id) then
-					internal.teardown_detour(popup_id)
-					return
-				end
-				local all_closed = true
-				local open_windows = vim.api.nvim_tabpage_list_wins(tab_id)
-				for _, covered_window in ipairs(coverable_windows) do
-					if
-						util.contains_element(open_windows, covered_window)
-						and covered_window ~= triggering_window
-					then
-						all_closed = false
-					end
-				end
-
-				if all_closed then
-					vim.api.nvim_win_close(popup_id, false)
-					-- Even if `nested` is set to true, WinClosed does not trigger itself.
-					vim.cmd.doautocmd("WinClosed " .. popup_id)
-				end
-			end,
-		})
-	end
-	-- We're running this to make sure initializing popups runs the same code path as updating popups
-	-- We make sure to do this after all state and autocmds are set.
+	-- We're running this to make sure initializing popups runs the same code
+	-- path as updating popups We make sure to do this after all state and
+	-- autocmds are set.
 	handle_base_resize()
 
 	if settings.options.title == "path" then
