@@ -61,9 +61,13 @@ function M.list_popups()
 end
 
 function M.list_coverable_windows()
-	return vim.tbl_filter(function(window)
-		return vim.tbl_contains(vim.api.nvim_list_wins(), window)
-	end, vim.tbl_flatten(vim.tbl_values(popup_to_coverable_windows)))
+	local windows = vim.api.nvim_list_wins()
+	return vim.iter(vim.tbl_values(popup_to_coverable_windows))
+		:flatten()
+		:filter(function(w)
+			return vim.tbl_contains(windows, w) -- make sure window is still open
+		end)
+		:totable()
 end
 
 -- Neovim autocmd events are quite nuanced:
