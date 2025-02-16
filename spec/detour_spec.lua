@@ -254,13 +254,6 @@ describe("detour", function()
 		end
 	end)
 
-	it("Always move focus to top popup", function()
-		pending("WinEnter doesn't work when running nvim as a command.")
-		local popup = assert(detour.Detour())
-		vim.cmd.split()
-		assert.same(vim.api.nvim_get_current_win(), popup)
-	end)
-
 	it(
 		"Handle cases when popups close without throwing a WinClosed event",
 		function()

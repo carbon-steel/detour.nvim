@@ -77,13 +77,13 @@ function M.overlap(window_a, window_b)
 	)
 end
 
-function M.find_top_popup()
-	local window_id = vim.api.nvim_get_current_win()
+function M.find_top_popup(window)
+	local window_id = window or vim.api.nvim_get_current_win()
 	local all_coverable_windows = internal.list_coverable_windows()
 	for _, popup in ipairs(internal.list_popups()) do
 		if
-			not vim.tbl_contains(all_coverable_windows, popup) -- ignore popups with popups nested in them
-			and vim.tbl_contains(M.find_covered_bases(popup), window_id)
+			not vim.list_contains(all_coverable_windows, popup) -- ignore popups with popups nested in them
+			and vim.tbl_contains(M.find_covered_windows(popup), window_id)
 		then
 			return popup
 		end
@@ -94,20 +94,18 @@ end
 -- Finds all base windows that are covered by the provided popup.
 -- If the provided window is not a popup, returns the given argument.
 function M.find_covered_bases(window_id)
-	local temp_id = window_id
+	local current_window = window_id
 	local coverable_bases = nil
-	while internal.get_coverable_windows(temp_id) do
-		coverable_bases = internal.get_coverable_windows(temp_id) or {}
-		if #coverable_bases == 0 then
-			assert(
-				false,
-				"[detour.nvim] There should never be an empty array in popup_to_covered_windows."
-			)
-		end
+	while internal.get_coverable_windows(current_window) do
+		coverable_bases = internal.get_coverable_windows(current_window) or {}
+		assert(
+			#coverable_bases > 0,
+			"[detour.nvim] There should never be an empty array in popup_to_covered_windows."
+		)
 		-- We iterate on only the first covered window because there are two cases:
 		-- A: there is exactly one covered window and it's another detour.
 		-- B: there is one or more covered windows and none of them are detours. We've found our covered base windows. Hence, this would be the last iteration of this loop.
-		temp_id = coverable_bases[1]
+		current_window = coverable_bases[1]
 	end
 
 	-- This covers the case where the window_id is not a detour popup and we never enter the above loop.
@@ -118,6 +116,36 @@ function M.find_covered_bases(window_id)
 	return vim.tbl_filter(function(base)
 		return M.overlap(base, window_id)
 	end, coverable_bases)
+end
+
+-- Finds all windows that are covered by the provided popup.
+-- If the provided window is not a popup, returns the given argument.
+function M.find_covered_windows(window)
+	local current_window = window
+	local coverable_windows = {}
+	while internal.get_coverable_windows(current_window) do
+		coverable_windows[#coverable_windows + 1] =
+			internal.get_coverable_windows(current_window)
+		assert(
+			#coverable_windows[#coverable_windows] > 0,
+			"[detour.nvim] There should never be an empty array in popup_to_covered_windows."
+		)
+		-- We iterate on only the first covered window because there are two cases:
+		-- A: there is exactly one covered window and it's another detour.
+		-- B: there is one or more covered windows and none of them are detours. We've found our covered base windows. Hence, this would be the last iteration of this loop.
+		current_window = coverable_windows[#coverable_windows][1]
+	end
+
+	if #coverable_windows == 0 then
+		return { window }
+	end
+
+	return vim.iter(coverable_windows)
+		:flatten()
+		:filter(function(other)
+			return M.overlap(other, window)
+		end)
+		:totable()
 end
 
 function M.is_open(window_id)
@@ -131,6 +159,24 @@ function M.stringify(number)
 		values[#values + 1] = tonumber(digit) + base
 	end
 	return string.char(unpack(values))
+end
+
+function M.pairs_by_keys(t, f)
+	local a = {}
+	for n in pairs(t) do
+		table.insert(a, n)
+	end
+	table.sort(a, f)
+	local i = 0 -- iterator variable
+	local iter = function() -- iterator function
+		i = i + 1
+		if a[i] == nil then
+			return nil
+		else
+			return a[i], t[a[i]]
+		end
+	end
+	return iter
 end
 
 return M
