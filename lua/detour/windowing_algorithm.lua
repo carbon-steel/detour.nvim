@@ -131,12 +131,12 @@ function M.construct_window_opts(coverable_windows, tab_id)
 		zindex = 1,
 	}
 
-	if window_opts.width > 40 then
+	if window_opts.width > 4 then
 		window_opts.width = window_opts.width - 4
 		window_opts.col = window_opts.col + 2
 	end
 
-	if window_opts.height >= 7 then
+	if window_opts.height > 2 then
 		window_opts.height = window_opts.height - 2
 		window_opts.row = window_opts.row + 1
 	end
