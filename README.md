@@ -179,7 +179,9 @@ end)
 # Milestones to Version 2
 
 * [X] Implement automatic titles for detours
-* [ ] Allow custom function for creating titles
+* [X] Allow custom function for creating titles
+    - After further thought, I've decided against this as the feature already
+      depends on an experimental feature.
 * [ ] Write docs
 * [X] Implement "detour-aware" window switching
 * [ ] Implement better semantics around coverable windows
