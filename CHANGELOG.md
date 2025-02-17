@@ -20,3 +20,6 @@
 ### Changed
 
 * Removed behavior that closes detour if its parents are closed.
+    - [Commit](https://github.com/carbon-steel/detour.nvim/commit/48d6e7031007f4ebda460b99beeecc50ef932bcc)
+* Keep window sizing behavior consistent until very small sizes
+    - [Commit](https://github.com/carbon-steel/detour.nvim/commit/39b19018711073edb0dd69a790e2ffdb4ebeb50c)
