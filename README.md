@@ -176,6 +176,15 @@ end)
 | --      | --                                                                                          | --            |
 | `title` | "path" sets the path of the current buffer as the title of the float. "none" sets no title. | "path"        |
 
+# Milestones to Version 2
+
+* [X] Implement automatic titles for detours
+* [ ] Allow custom function for creating titles
+* [ ] Write docs
+* [X] Implement "detour-aware" window switching
+* [ ] Implement better semantics around coverable windows
+* [ ] Add lua annotations to all functions
+
 # FAQ
 
 > I want to convert popups to splits or tabs.
