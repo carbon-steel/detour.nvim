@@ -14,6 +14,8 @@
     - [Commit](https://github.com/carbon-steel/detour.nvim/commit/a7935ce1283a141bcca09d6bdf07c9c1b537bbfb)
 * Redid help detour example
     - [Commit](https://github.com/carbon-steel/detour.nvim/commit/bf59c29a06b58cd0e9f53b04aad7646204af4479)
+* Introduced nesting autocmds
+    - [Commit](https://github.com/carbon-steel/detour.nvim/commit/42a724730e2351057973e1231016b8918e161e4f)
 
 ### Changed
 
