@@ -48,6 +48,7 @@ function M.ShowPathInTitle(popup_id)
 		callback = function()
 			update_title(popup_id)
 		end,
+		nested = true,
 	})
 end
 
@@ -67,6 +68,7 @@ function M.CloseOnLeave(popup_id)
 				vim.api.nvim_win_close(popup_id, false)
 			end
 		end,
+		nested = true,
 	})
 end
 

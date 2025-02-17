@@ -120,16 +120,10 @@ local function popup_above_float()
 			if
 				vim.tbl_contains(vim.api.nvim_tabpage_list_wins(tab_id), parent)
 			then
-				vim.schedule( -- schedule to avoid any trickiness with nested autocmd events.
-					function()
-						vim.fn.win_gotoid(parent)
-						if vim.g.detour_testing then
-							vim.cmd.doautocmd("User DetourGoTo" .. parent)
-						end
-					end
-				)
+				vim.fn.win_gotoid(parent)
 			end
 		end,
+		nested = true,
 	})
 
 	-- We're running this to make sure initializing popups runs the same code
@@ -240,18 +234,12 @@ local function popup(bufnr, coverable_windows)
 						base
 					)
 				then
-					vim.schedule( -- schedule to avoid any trickiness with nested autocmd events.
-						function()
-							vim.fn.win_gotoid(base)
-							if vim.g.detour_testing then
-								vim.cmd.doautocmd("User DetourGoTo" .. base)
-							end
-						end
-					)
+					vim.fn.win_gotoid(base)
 					return
 				end
 			end
 		end,
+		nested = true,
 	})
 
 	-- We're running this to make sure initializing popups runs the same code
