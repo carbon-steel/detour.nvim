@@ -28,6 +28,7 @@ vim.api.nvim_create_autocmd({ "WinEnter" }, {
 			vim.fn.win_gotoid(util.find_top_popup())
 		end
 	end,
+	nested = true,
 })
 
 --- Switch windows to the right in "detour-aware" fashion.
@@ -115,7 +116,12 @@ function M.DetourWinCmdJ()
 	local base = covered_bases[1]
 	for _, window in ipairs(covered_bases) do
 		local _, bottom, _, _ = util.get_text_area_dimensions(window)
-		if bottom ~= vim.o.lines then
+		if
+			bottom
+			~= vim.o.lines
+				- vim.o.cmdheight
+				- (vim.o.laststatus == 0 and 0 or 1)
+		then -- subtract one for statusline
 			base = window
 			break
 		end

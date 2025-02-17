@@ -63,10 +63,13 @@ function M.construct_window_opts(coverable_windows, tab_id)
 				local uncoverable_top, uncoverable_bottom, uncoverable_left, uncoverable_right =
 					util.get_text_area_dimensions(uncoverable_window)
 				if not is_statusline_global() then -- we have to worry about statuslines
-					-- The fact that we're starting with text area dimensions means that all of the rectangles we are
-					-- working with do not include statuslines. This means that we need to avoid inadvertantly covering
-					-- a window's status line. Neovim can be configured to only show statuslines when there are multiple
-					-- windows on the screen but we can ignore that because this loop only runs when there are multiple
+					-- The fact that we're starting with text area dimensions
+					-- means that all of the rectangles we are working with do
+					-- not include statuslines. This means that we need to avoid
+					-- inadvertantly covering a window's status line. Neovim can
+					-- be configured to only show statuslines when there are
+					-- multiple windows on the screen but we can ignore that
+					-- because this loop only runs when there are multiple
 					-- windows on the screen.
 					uncoverable_top = uncoverable_top - 1 -- don't cover above window's statusline
 					uncoverable_bottom = uncoverable_bottom + 1 -- don't cover this window's statusline
@@ -75,7 +78,10 @@ function M.construct_window_opts(coverable_windows, tab_id)
 				local highest_bottom = math.min(bottom, uncoverable_bottom)
 				local rightest_left = math.max(left, uncoverable_left)
 				local leftest_right = math.min(right, uncoverable_right)
-				if (lowest_top < highest_bottom) and (rightest_left < leftest_right) then
+				if
+					(lowest_top < highest_bottom)
+					and (rightest_left < leftest_right)
+				then
 					legal = false
 				end
 			end
@@ -89,7 +95,9 @@ function M.construct_window_opts(coverable_windows, tab_id)
 	end
 
 	if dimensions == nil then
-		vim.api.nvim_err_writeln("[detour.nvim] was unable to find a spot to create a popup.")
+		vim.api.nvim_err_writeln(
+			"[detour.nvim] was unable to find a spot to create a popup."
+		)
 		return nil
 	end
 
@@ -98,11 +106,15 @@ function M.construct_window_opts(coverable_windows, tab_id)
 	local height = bottom - top
 
 	if height < 1 then
-		vim.api.nvim_err_writeln("[detour.nvim] (please file a github issue!) height is supposed to be at least 1.")
+		vim.api.nvim_err_writeln(
+			"[detour.nvim] (please file a github issue!) height is supposed to be at least 1."
+		)
 		return nil
 	end
 	if width < 1 then
-		vim.api.nvim_err_writeln("[detour.nvim] (please file a github issue!) width is supposed to be at least 1.")
+		vim.api.nvim_err_writeln(
+			"[detour.nvim] (please file a github issue!) width is supposed to be at least 1."
+		)
 		return nil
 	end
 
