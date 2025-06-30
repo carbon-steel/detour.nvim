@@ -48,7 +48,6 @@ function M.ShowPathInTitle(popup_id)
 		callback = function()
 			update_title(popup_id)
 		end,
-		nested = true,
 	})
 end
 
