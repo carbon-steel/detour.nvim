@@ -5,7 +5,7 @@ local internal = require("detour.internal")
 
 local ns = vim.api.nvim_create_namespace("detour.nvim-ns")
 
-local timer = vim.loop.new_timer()
+local timer = assert(vim.loop.new_timer())
 
 -- This implements a trailing debouce where each call to the debounced function
 -- will start a timer and cancel any existing timers for that function. The
