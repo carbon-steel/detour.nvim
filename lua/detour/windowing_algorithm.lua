@@ -114,27 +114,19 @@ function M.construct_window_opts(coverable_windows, tab_id)
 	local height = bottom - top
 
 	if height < 1 then
-		vim.api.nvim_echo(
+		vim.api.nvim_echo({
 			{
-				{
-					"[detour.nvim] (please file a github issue!) height is supposed to be at least 1.",
-				},
+				"[detour.nvim] (please file a github issue!) height is supposed to be at least 1.",
 			},
-			true,
-			{ err = true }
-		)
+		}, true, { err = true })
 		return nil
 	end
 	if width < 1 then
-		vim.api.nvim_echo(
+		vim.api.nvim_echo({
 			{
-				{
-					"[detour.nvim] (please file a github issue!) width is supposed to be at least 1.",
-				},
+				"[detour.nvim] (please file a github issue!) width is supposed to be at least 1.",
 			},
-			true,
-			{ err = true }
-		)
+		}, true, { err = true })
 		return nil
 	end
 
@@ -162,6 +154,34 @@ function M.construct_window_opts(coverable_windows, tab_id)
 	end
 
 	return window_opts
+end
+
+---Construct nested float window opts within a parent float.
+---@param parent integer
+---@param layer integer?
+---@return table
+function M.construct_nest(parent, layer)
+	local top, bottom, left, right = util.get_text_area_dimensions(parent)
+	local width = right - left
+	local height = bottom - top
+	local border = "rounded"
+	if height >= 3 then
+		height = height - 2
+		top = top + 1
+	end
+	if width >= 3 then
+		width = width - 2
+		left = left + 1
+	end
+	return {
+		relative = "editor",
+		row = top,
+		col = left,
+		width = width,
+		height = height,
+		border = border,
+		zindex = layer,
+	}
 end
 
 return M

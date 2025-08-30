@@ -9,34 +9,6 @@ local settings = require("detour.config")
 -- * User DetourPopupResized<id>: This event is triggered whenever a detour
 -- popup is resized. The event pattern has the window's ID concatenated to it.
 
----Construct nested float window opts within a parent float.
----@param parent integer
----@param layer integer?
----@return table
-local function construct_nest(parent, layer)
-	local top, bottom, left, right = util.get_text_area_dimensions(parent)
-	local width = right - left
-	local height = bottom - top
-	local border = "rounded"
-	if height >= 3 then
-		height = height - 2
-		top = top + 1
-	end
-	if width >= 3 then
-		width = width - 2
-		left = left + 1
-	end
-	return {
-		relative = "editor",
-		row = top,
-		col = left,
-		width = width,
-		height = height,
-		border = border,
-		zindex = layer,
-	}
-end
-
 ---Resize an existing popup and update covered windows' focusability.
 ---@param window_id integer
 ---@param new_window_opts table?
@@ -103,7 +75,7 @@ local function popup_above_float()
 	end
 
 	local parent_zindex = util.get_maybe_zindex(parent) or 0
-	local window_opts = construct_nest(parent, parent_zindex + 1)
+	local window_opts = algo.construct_nest(parent, parent_zindex + 1)
 
 	local child =
 		vim.api.nvim_open_win(vim.api.nvim_win_get_buf(0), true, window_opts)
@@ -122,7 +94,7 @@ local function popup_above_float()
 				internal.teardown_detour(child)
 				return
 			end
-			local new_window_opts = construct_nest(parent)
+			local new_window_opts = algo.construct_nest(parent)
 			resize_popup(child, new_window_opts)
 		end,
 	})
