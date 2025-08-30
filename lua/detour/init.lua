@@ -11,12 +11,8 @@ local settings = require("detour.config")
 
 ---Resize an existing popup and update covered windows' focusability.
 ---@param window_id integer
----@param new_window_opts table?
+---@param new_window_opts table
 local function resize_popup(window_id, new_window_opts)
-	if new_window_opts == nil then
-		return
-	end
-
 	local current_window_opts = vim.api.nvim_win_get_config(window_id)
 	vim.api.nvim_win_set_config(
 		window_id,
@@ -94,8 +90,10 @@ local function popup_above_float()
 				internal.teardown_detour(child)
 				return
 			end
-			local new_window_opts = algo.construct_nest(parent)
-			resize_popup(child, new_window_opts)
+
+			if util.is_open(parent) then
+				resize_popup(child, algo.construct_nest(parent))
+			end
 		end,
 	})
 	vim.api.nvim_create_autocmd({ "WinClosed" }, {
@@ -187,15 +185,6 @@ local function popup(bufnr, coverable_windows)
 		{}
 	)
 
-	local function handle_base_resize()
-		-- Even if construct_window_opts returns nil, do not close the popup as
-		-- it is being used by the user. Just leave it for the user to handle.
-		resize_popup(
-			popup_id,
-			algo.construct_window_opts(coverable_windows, tab_id)
-		)
-	end
-
 	vim.api.nvim_create_autocmd({ "WinResized", "VimResized" }, {
 		group = augroup_id,
 		callback = function()
@@ -214,7 +203,11 @@ local function popup(bufnr, coverable_windows)
 				if
 					vim.list_contains(vim.api.nvim_tabpage_list_wins(tab_id), x)
 				then
-					handle_base_resize()
+					local new_window_opts =
+						algo.construct_window_opts(coverable_windows, tab_id)
+					if new_window_opts then
+						resize_popup(popup_id, new_window_opts)
+					end
 					break
 				end
 			end
@@ -240,14 +233,14 @@ local function popup(bufnr, coverable_windows)
 		nested = true,
 	})
 
-	-- We're running this to make sure initializing popups runs the same code
-	-- path as updating popups We make sure to do this after all state and
-	-- autocmds are set.
-	handle_base_resize()
-
 	if settings.options.title == "path" then
 		require("detour.features").ShowPathInTitle(popup_id)
 	end
+
+	-- We're running this to make sure initializing popups runs the same code
+	-- path as updating popups. We make sure to do this after all state and
+	-- autocmds are set.
+	vim.api.nvim_exec_autocmds("VimResized", {})
 
 	return popup_id
 end
