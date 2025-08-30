@@ -179,4 +179,15 @@ describe("detour", function()
 		movements.DetourWinCmdW()
 		assert.same(bottom_base, vim.api.nvim_get_current_win())
 	end)
+
+	it("Move cursor on SafeState", function()
+		local base = vim.api.nvim_get_current_win()
+		local popup = detour.Detour()
+
+		vim.opt.eventignore = "all" -- deactivate plugin
+		vim.api.nvim_set_current_win(base)
+		vim.opt.eventignore = "" -- reactivate plugin
+		vim.api.nvim_exec_autocmds("SafeState", {})
+		assert.same(popup, vim.api.nvim_get_current_win())
+	end)
 end)

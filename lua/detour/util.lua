@@ -136,6 +136,7 @@ end
 ---@param window_id integer
 ---@return integer[]
 function M.find_covered_bases(window_id)
+	assert(M.is_open(window_id), tostring(window_id) .. " is not open")
 	local current_window = window_id
 	local coverable_bases = nil
 	while internal.get_coverable_windows(current_window) do
