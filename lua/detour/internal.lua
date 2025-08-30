@@ -9,7 +9,7 @@ local M = {}
 ---@field get_coverable_windows fun(popup_id: integer): integer[]|nil
 ---@field record_popup fun(popup_id: integer, coverable_windows: integer[]): boolean
 ---@field list_popups fun(): integer[]
----@field list_coverable_windows fun(): integer[]
+---@field list_reserved_windows fun(): integer[]
 ---@field garbage_collect fun()
 
 ---@type table<integer, integer[]>
@@ -66,15 +66,11 @@ function M.record_popup(popup_id, coverable_windows)
 	end, coverable_windows)
 
 	if #coverable_windows == 0 then
-		vim.api.nvim_echo(
+		vim.api.nvim_echo({
 			{
-				{
-					"[detour.nvim] You must provide at least one valid (open) coverable window.",
-				},
+				"[detour.nvim] You must provide at least one valid (open) coverable window.",
 			},
-			true,
-			{ err = true }
-		)
+		}, true, { err = true })
 		return false
 	end
 	popup_to_coverable_windows[popup_id] = coverable_windows
@@ -87,7 +83,7 @@ function M.list_popups()
 end
 
 ---@return integer[]
-function M.list_coverable_windows()
+function M.list_reserved_windows()
 	local windows = vim.api.nvim_list_wins()
 	return vim.iter(vim.tbl_values(popup_to_coverable_windows))
 		:flatten()
