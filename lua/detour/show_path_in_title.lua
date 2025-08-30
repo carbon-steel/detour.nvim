@@ -7,7 +7,7 @@ local internal = require("detour.internal")
 local ns = vim.api.nvim_create_namespace("detour.nvim-ns")
 
 ---@type uv.uv_timer_t
-local timer = assert(vim.loop.new_timer())
+local timer = assert(vim.uv.new_timer())
 
 -- This implements a trailing debouce where each call to the debounced function
 -- will start a timer and cancel any existing timers for that function. The
@@ -29,9 +29,11 @@ end
 ---@param _ any
 ---@param window_id integer
 local function update_title(_, window_id)
-	if vim.tbl_contains(internal.list_popups(), window_id) then
-		vim.cmd.doautocmd("User DetourUpdateTitle" .. util.stringify(window_id))
-	end
+    if vim.tbl_contains(internal.list_popups(), window_id) then
+        vim.api.nvim_exec_autocmds("User", {
+            pattern = "DetourUpdateTitle" .. util.stringify(window_id),
+        })
+    end
 end
 
 -- The reason why we're using a callback on decoration_provider instead of using an autocmd on BufEnter is because we

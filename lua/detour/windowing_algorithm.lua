@@ -101,8 +101,10 @@ function M.construct_window_opts(coverable_windows, tab_id)
 	end
 
 	if dimensions == nil then
-		vim.api.nvim_err_writeln(
-			"[detour.nvim] was unable to find a spot to create a popup."
+		vim.api.nvim_echo(
+			{ { "[detour.nvim] was unable to find a spot to create a popup." } },
+			true,
+			{ err = true }
 		)
 		return nil
 	end
@@ -112,14 +114,26 @@ function M.construct_window_opts(coverable_windows, tab_id)
 	local height = bottom - top
 
 	if height < 1 then
-		vim.api.nvim_err_writeln(
-			"[detour.nvim] (please file a github issue!) height is supposed to be at least 1."
+		vim.api.nvim_echo(
+			{
+				{
+					"[detour.nvim] (please file a github issue!) height is supposed to be at least 1.",
+				},
+			},
+			true,
+			{ err = true }
 		)
 		return nil
 	end
 	if width < 1 then
-		vim.api.nvim_err_writeln(
-			"[detour.nvim] (please file a github issue!) width is supposed to be at least 1."
+		vim.api.nvim_echo(
+			{
+				{
+					"[detour.nvim] (please file a github issue!) width is supposed to be at least 1.",
+				},
+			},
+			true,
+			{ err = true }
 		)
 		return nil
 	end

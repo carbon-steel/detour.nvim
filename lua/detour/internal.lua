@@ -66,8 +66,14 @@ function M.record_popup(popup_id, coverable_windows)
 	end, coverable_windows)
 
 	if #coverable_windows == 0 then
-		vim.api.nvim_err_writeln(
-			"[detour.nvim] You must provide at least one valid (open) coverable window."
+		vim.api.nvim_echo(
+			{
+				{
+					"[detour.nvim] You must provide at least one valid (open) coverable window.",
+				},
+			},
+			true,
+			{ err = true }
 		)
 		return false
 	end

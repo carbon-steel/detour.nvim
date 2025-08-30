@@ -81,7 +81,9 @@ local function resize_popup(window_id, new_window_opts)
 	end
 
 	-- Fully complete resizing before propogating event.
-	vim.cmd.doautocmd("User DetourPopupResized" .. util.stringify(window_id))
+	vim.api.nvim_exec_autocmds("User", {
+		pattern = "DetourPopupResized" .. util.stringify(window_id),
+	})
 end
 
 ---Create a nested popup above the current floating window.
@@ -91,10 +93,12 @@ local function popup_above_float()
 	local tab_id = vim.api.nvim_get_current_tabpage()
 
 	if vim.tbl_contains(internal.list_coverable_windows(), parent) then
-		vim.api.nvim_err_writeln(
-			"[detour.nvim] This popup already has a child nested inside it:"
-				.. parent
-		)
+		vim.api.nvim_echo({
+			{
+				"[detour.nvim] This popup already has a child nested inside it: "
+					.. parent,
+			},
+		}, true, { err = true })
 		return nil
 	end
 
@@ -139,7 +143,9 @@ local function popup_above_float()
 	-- We're running this to make sure initializing popups runs the same code
 	-- path as updating popups
 	-- We make sure to do this after all state and autocmds are set.
-	vim.cmd.doautocmd("User DetourPopupResized" .. util.stringify(parent))
+	vim.api.nvim_exec_autocmds("User", {
+		pattern = "DetourPopupResized" .. util.stringify(parent),
+	})
 	if settings.options.title == "path" then
 		require("detour.features").ShowPathInTitle(child)
 	end
@@ -162,26 +168,32 @@ local function popup(bufnr, coverable_windows)
 	end
 
 	if #coverable_windows == 0 then
-		vim.api.nvim_err_writeln(
-			"[detour.nvim] No windows provided in coverable_windows."
+		vim.api.nvim_echo(
+			{ { "[detour.nvim] No windows provided in coverable_windows." } },
+			true,
+			{ err = true }
 		)
 		return nil
 	end
 
 	for _, window in ipairs(coverable_windows) do
 		if util.is_floating(window) then
-			vim.api.nvim_err_writeln(
-				"[detour.nvim] No floating windows allowed in base (ie, non-nested) popup"
-					.. window
-			)
+			vim.api.nvim_echo({
+				{
+					"[detour.nvim] No floating windows allowed in base (ie, non-nested) popup "
+						.. window,
+				},
+			}, true, { err = true })
 			return nil
 		end
 
 		if vim.tbl_contains(internal.list_coverable_windows(), window) then
-			vim.api.nvim_err_writeln(
-				"[detour.nvim] This window is already reserved by another popup:"
-					.. window
-			)
+			vim.api.nvim_echo({
+				{
+					"[detour.nvim] This window is already reserved by another popup: "
+						.. window,
+				},
+			}, true, { err = true })
 			return nil
 		end
 	end
