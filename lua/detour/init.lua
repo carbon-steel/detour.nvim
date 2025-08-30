@@ -60,7 +60,7 @@ local function popup_above_float()
 	local parent = vim.api.nvim_get_current_win()
 	local tab_id = vim.api.nvim_get_current_tabpage()
 
-	if vim.tbl_contains(internal.list_coverable_windows(), parent) then
+	if vim.tbl_contains(internal.list_reserved_windows(), parent) then
 		vim.api.nvim_echo({
 			{
 				"[detour.nvim] This popup already has a child nested inside it: "
@@ -98,17 +98,19 @@ local function popup_above_float()
 	})
 	vim.api.nvim_create_autocmd({ "WinClosed" }, {
 		group = augroup_id,
-		pattern = "" .. child,
+		pattern = tostring(child),
 		callback = function()
 			internal.teardown_detour(child)
-			if
-				vim.tbl_contains(vim.api.nvim_tabpage_list_wins(tab_id), parent)
-			then
+			if util.is_open(parent) then
 				vim.fn.win_gotoid(parent)
 			end
 		end,
-		nested = true,
+		nested = true, -- Trigger all the autocmds for entering a new window
 	})
+
+	if settings.options.title == "path" then
+		require("detour.features").ShowPathInTitle(child)
+	end
 
 	-- We're running this to make sure initializing popups runs the same code
 	-- path as updating popups
@@ -116,28 +118,24 @@ local function popup_above_float()
 	vim.api.nvim_exec_autocmds("User", {
 		pattern = "DetourPopupResized" .. util.stringify(parent),
 	})
-	if settings.options.title == "path" then
-		require("detour.features").ShowPathInTitle(child)
-	end
 	return child
 end
 
 ---Create a base popup covering the given windows (or all non-floating windows).
 ---@param bufnr integer
----@param coverable_windows integer[]?
+---@param reserve_windows integer[]?
 ---@return integer|nil popup_id
-local function popup(bufnr, coverable_windows)
+local function popup(bufnr, reserve_windows)
 	local tab_id = vim.api.nvim_get_current_tabpage()
-	if coverable_windows == nil then
-		coverable_windows = vim.tbl_filter(function(window)
+	reserve_windows = reserve_windows
+		or vim.tbl_filter(function(window)
 			return not (
 				util.is_floating(window)
-				or vim.tbl_contains(internal.list_coverable_windows(), window)
+				or vim.tbl_contains(internal.list_reserved_windows(), window)
 			)
 		end, vim.api.nvim_tabpage_list_wins(tab_id))
-	end
 
-	if #coverable_windows == 0 then
+	if #reserve_windows == 0 then
 		vim.api.nvim_echo(
 			{ { "[detour.nvim] No windows provided in coverable_windows." } },
 			true,
@@ -146,7 +144,7 @@ local function popup(bufnr, coverable_windows)
 		return nil
 	end
 
-	for _, window in ipairs(coverable_windows) do
+	for _, window in ipairs(reserve_windows) do
 		if util.is_floating(window) then
 			vim.api.nvim_echo({
 				{
@@ -157,10 +155,10 @@ local function popup(bufnr, coverable_windows)
 			return nil
 		end
 
-		if vim.tbl_contains(internal.list_coverable_windows(), window) then
+		if vim.tbl_contains(internal.list_reserved_windows(), window) then
 			vim.api.nvim_echo({
 				{
-					"[detour.nvim] This window is already reserved by another popup: "
+					"[detour.nvim] This window is already reserved by another detour: "
 						.. window,
 				},
 			}, true, { err = true })
@@ -168,14 +166,13 @@ local function popup(bufnr, coverable_windows)
 		end
 	end
 
-	-- We call handle_base_resize() later which overwrites the window_opts we set here, but this is still useful to validate that a popup can successfully be created at all.
-	local window_opts = algo.construct_window_opts(coverable_windows, tab_id)
+	local window_opts = algo.construct_window_opts(reserve_windows, tab_id)
 	if window_opts == nil then
 		return nil
 	end
 
 	local popup_id = vim.api.nvim_open_win(bufnr, true, window_opts)
-	if not internal.record_popup(popup_id, coverable_windows) then
+	if not internal.record_popup(popup_id, reserve_windows) then
 		vim.api.nvim_win_close(popup_id, true)
 		return nil
 	end
@@ -201,7 +198,7 @@ local function popup(bufnr, coverable_windows)
 			local changed_tab = vim.api.nvim_win_get_tabpage(changed_window)
 			if tab_id == changed_tab then
 				local new_window_opts =
-					algo.construct_window_opts(coverable_windows, tab_id)
+					algo.construct_window_opts(reserve_windows, tab_id)
 				if new_window_opts then
 					resize_popup(popup_id, new_window_opts)
 				end
@@ -218,7 +215,7 @@ local function popup(bufnr, coverable_windows)
 			end
 
 			local new_window_opts =
-				algo.construct_window_opts(coverable_windows, tab_id)
+				algo.construct_window_opts(reserve_windows, tab_id)
 			-- If there is an issue that prevents a valid configuration for the
 			-- detour, just leave it for the user to manually clean up.
 			if new_window_opts then
@@ -232,7 +229,7 @@ local function popup(bufnr, coverable_windows)
 		pattern = "" .. popup_id,
 		callback = function()
 			internal.teardown_detour(popup_id)
-			for _, base in ipairs(coverable_windows) do
+			for _, base in ipairs(reserve_windows) do
 				if
 					vim.tbl_contains(
 						vim.api.nvim_tabpage_list_wins(tab_id),
@@ -244,7 +241,7 @@ local function popup(bufnr, coverable_windows)
 				end
 			end
 		end,
-		nested = true,
+		nested = true, -- Trigger all the autocmds for entering a new window
 	})
 
 	if settings.options.title == "path" then

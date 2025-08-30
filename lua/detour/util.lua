@@ -119,7 +119,7 @@ end
 ---@return integer window_id
 function M.find_top_popup(window)
 	local window_id = window or vim.api.nvim_get_current_win()
-	local all_coverable_windows = internal.list_coverable_windows()
+	local all_coverable_windows = internal.list_reserved_windows()
 	for _, popup in ipairs(internal.list_popups()) do
 		if
 			not vim.list_contains(all_coverable_windows, popup) -- ignore popups with popups nested in them
