@@ -121,4 +121,29 @@ assert(
 	"[detour.nvim] Failed to create garbage_collect timer."
 )
 
+local group = vim.api.nvim_create_augroup("detour_internal", {})
+
+-- Sometimes the cursor can end up behind a detour (eg, when a window is
+-- closed). In these cases just move the cursor to an appropriate place.
+vim.api.nvim_create_autocmd({ "SafeState" }, {
+	group = group,
+	callback = function()
+		local covered_bases = {}
+		for popup in pairs(popup_to_coverable_windows) do
+			if require("detour.util").is_open(popup) then
+				-- No need to check floating windows since they should be
+				-- unfocusable
+				vim.list_extend(
+					covered_bases,
+					require("detour.util").find_covered_bases(popup)
+				)
+			end
+		end
+		covered_bases = require("detour.util").Set(covered_bases)
+		if covered_bases[vim.api.nvim_get_current_win()] then
+			require("detour.movements").DetourWinCmdW()
+		end
+	end,
+})
+
 return M
