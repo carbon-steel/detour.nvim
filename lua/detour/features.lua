@@ -3,6 +3,8 @@ local M = {}
 local util = require("detour.util")
 local internal = require("detour.internal")
 
+---Update the detour window title to the current buffer path relative to cwd.
+---@param window_id integer
 local function update_title(window_id)
 	-- Assumption: window_id is not closed as this was triggered from the fact that we are redrawing this window.
 	local buffer_id = vim.api.nvim_win_get_buf(window_id)
@@ -27,6 +29,8 @@ local function update_title(window_id)
 	)
 end
 
+---Show the buffer path in the given popup's title and keep it updated.
+---@param popup_id integer
 function M.ShowPathInTitle(popup_id)
 	require("detour.show_path_in_title")
 
@@ -51,6 +55,8 @@ function M.ShowPathInTitle(popup_id)
 	})
 end
 
+---Close the popup when focus leaves to a non-floating window.
+---@param popup_id integer
 function M.CloseOnLeave(popup_id)
 	-- This autocmd will close the created detour popup when you focus on a different window.
 	vim.api.nvim_create_autocmd({ "WinEnter" }, {

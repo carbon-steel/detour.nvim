@@ -1,11 +1,18 @@
 local M = {}
 
+---@class detour.config.Options
+---@field title "none"|"path"
+
+---@type detour.config.Options
 local defaults = {
 	title = "path",
 }
 
+---@type detour.config.Options
 M.options = {}
 
+---Setup detour.nvim configuration.
+---@param args? detour.config.Options
 M.setup = function(args)
 	args = args or {}
 

@@ -3,15 +3,29 @@
 
 local M = {}
 
+---@class detour.internal
+---@field construct_augroup_name fun(window_id: integer): string
+---@field teardown_detour fun(window_id: integer)
+---@field get_coverable_windows fun(popup_id: integer): integer[]|nil
+---@field record_popup fun(popup_id: integer, coverable_windows: integer[]): boolean
+---@field list_popups fun(): integer[]
+---@field list_coverable_windows fun(): integer[]
+---@field garbage_collect fun()
+
+---@type table<integer, integer[]>
 local popup_to_coverable_windows = {}
 
+---@param window_id integer
+---@return string
 function M.construct_augroup_name(window_id)
 	return "detour-" .. window_id
 end
 
 -- Needs to be idempotent
+---@param window_id integer
 function M.teardown_detour(window_id)
-	vim.api.nvim_del_augroup_by_name(M.construct_augroup_name(window_id))
+	-- Be tolerant if the augroup was already removed by another path.
+	pcall(vim.api.nvim_del_augroup_by_name, M.construct_augroup_name(window_id))
 	for _, covered_window in ipairs(M.get_coverable_windows(window_id) or {}) do
 		if vim.api.nvim_win_get_config(covered_window).relative ~= "" then
 			vim.api.nvim_win_set_config(
@@ -27,6 +41,8 @@ function M.teardown_detour(window_id)
 	popup_to_coverable_windows[window_id] = nil
 end
 
+---@param popup_id integer
+---@return integer[]|nil
 function M.get_coverable_windows(popup_id)
 	if popup_to_coverable_windows[popup_id] == nil then
 		return nil
@@ -40,6 +56,9 @@ function M.get_coverable_windows(popup_id)
 	return popup_to_coverable_windows[popup_id]
 end
 
+---@param popup_id integer
+---@param coverable_windows integer[]
+---@return boolean
 function M.record_popup(popup_id, coverable_windows)
 	local open_windows = vim.api.nvim_list_wins()
 	coverable_windows = vim.tbl_filter(function(window_id)
@@ -56,10 +75,12 @@ function M.record_popup(popup_id, coverable_windows)
 	return true
 end
 
+---@return integer[]
 function M.list_popups()
 	return vim.tbl_keys(popup_to_coverable_windows)
 end
 
+---@return integer[]
 function M.list_coverable_windows()
 	local windows = vim.api.nvim_list_wins()
 	return vim.iter(vim.tbl_values(popup_to_coverable_windows))

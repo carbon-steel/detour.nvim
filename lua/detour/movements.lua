@@ -37,6 +37,7 @@ vim.api.nvim_create_autocmd({ "WinEnter" }, {
 --- `vim.cmd.wincmd('l').`
 ---
 --- If arriving into a window covered by a detour, switch into that detour.
+---@return nil
 function M.DetourWinCmdL()
 	local covered_bases =
 		util.find_covered_bases(vim.api.nvim_get_current_win())
@@ -71,6 +72,7 @@ end
 --- `vim.cmd.wincmd('h').`
 ---
 --- If arriving into a window covered by a detour, switch into that detour.
+---@return nil
 function M.DetourWinCmdH()
 	local covered_bases =
 		util.find_covered_bases(vim.api.nvim_get_current_win())
@@ -105,6 +107,7 @@ end
 --- `vim.cmd.wincmd('j').`
 ---
 --- If arriving into a window covered by a detour, switch into that detour.
+---@return nil
 function M.DetourWinCmdJ()
 	local covered_bases =
 		util.find_covered_bases(vim.api.nvim_get_current_win())
@@ -144,6 +147,7 @@ end
 --- `vim.cmd.wincmd('k').`
 ---
 --- If arriving into a window covered by a detour, switch into that detour.
+---@return nil
 function M.DetourWinCmdK()
 	local covered_bases =
 		util.find_covered_bases(vim.api.nvim_get_current_win())
@@ -174,6 +178,7 @@ end
 ---
 --- Calls `vim.cmd.wincmd('w')` if arriving into a window covered by a detour,
 --- switch into that detour.
+---@return nil
 function M.DetourWinCmdW()
 	local windows = vim.api.nvim_tabpage_list_wins(0)
 	local current_top = util.find_top_popup()

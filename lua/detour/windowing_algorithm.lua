@@ -2,12 +2,18 @@ local M = {}
 
 local util = require("detour.util")
 
+---Whether the statusline is global (laststatus == 3).
+---@return boolean
 local function is_statusline_global()
 	-- When laststatus == 3, Neovim uses a single global statusline
 	-- and individual windows do not have their own.
 	return vim.o.laststatus == 3
 end
 
+---Compute float options to cover the given windows without overlapping others.
+---@param coverable_windows integer[]
+---@param tab_id integer
+---@return table|nil
 function M.construct_window_opts(coverable_windows, tab_id)
 	local roots = {}
 	for _, window_id in ipairs(vim.api.nvim_tabpage_list_wins(tab_id)) do

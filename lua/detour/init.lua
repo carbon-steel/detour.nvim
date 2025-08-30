@@ -9,6 +9,10 @@ local settings = require("detour.config")
 -- * User DetourPopupResized<id>: This event is triggered whenever a detour
 -- popup is resized. The event pattern has the window's ID concatenated to it.
 
+---Construct nested float window opts within a parent float.
+---@param parent integer
+---@param layer integer?
+---@return table
 local function construct_nest(parent, layer)
 	local top, bottom, left, right = util.get_text_area_dimensions(parent)
 	local width = right - left
@@ -33,6 +37,9 @@ local function construct_nest(parent, layer)
 	}
 end
 
+---Resize an existing popup and update covered windows' focusability.
+---@param window_id integer
+---@param new_window_opts table?
 local function resize_popup(window_id, new_window_opts)
 	if new_window_opts == nil then
 		return
@@ -77,6 +84,8 @@ local function resize_popup(window_id, new_window_opts)
 	vim.cmd.doautocmd("User DetourPopupResized" .. util.stringify(window_id))
 end
 
+---Create a nested popup above the current floating window.
+---@return integer|nil popup_id
 local function popup_above_float()
 	local parent = vim.api.nvim_get_current_win()
 	local tab_id = vim.api.nvim_get_current_tabpage()
@@ -137,6 +146,10 @@ local function popup_above_float()
 	return child
 end
 
+---Create a base popup covering the given windows (or all non-floating windows).
+---@param bufnr integer
+---@param coverable_windows integer[]?
+---@return integer|nil popup_id
 local function popup(bufnr, coverable_windows)
 	local tab_id = vim.api.nvim_get_current_tabpage()
 	if coverable_windows == nil then
@@ -255,6 +268,8 @@ local function popup(bufnr, coverable_windows)
 	return popup_id
 end
 
+---Open a detour popup
+---@return integer|nil popup_id
 M.Detour = function()
 	internal.garbage_collect()
 	if util.is_floating(vim.api.nvim_get_current_win()) then
@@ -264,6 +279,8 @@ M.Detour = function()
 	return popup(vim.api.nvim_get_current_buf())
 end
 
+---Open a detour popup covering only the current window.
+---@return integer|nil popup_id
 M.DetourCurrentWindow = function()
 	internal.garbage_collect()
 
@@ -277,6 +294,7 @@ M.DetourCurrentWindow = function()
 	)
 end
 
+---@type fun(args?: detour.config.Options)
 M.setup = require("detour.config").setup
 
 return M
