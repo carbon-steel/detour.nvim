@@ -62,13 +62,14 @@ local function resize_popup(window_id, new_window_opts)
 
 	-- Sometimes, resizing terminal buffers can end up scrolling the terminal UI
 	-- horizontally so that you only see a portion of the terminal UI. This code
-	-- scrolls the terminal UI so that
+	-- scrolls the terminal UI so that the window keeps showing the leftmost
+	-- column
 	--
 	-- Condition on terminal mode (instead of checking whether buffer is
 	-- terminal-type) just in case user was intentionally looking at a specific
 	-- location in visual or normal mode.
 	if vim.fn.mode() == "t" then
-		local row, _ = unpack(vim.api.nvim_win_get_position(window_id))
+		local row = vim.api.nvim_win_get_position(window_id)[1]
 		vim.api.nvim_win_set_cursor(window_id, { row, 0 })
 	end
 
