@@ -185,7 +185,7 @@ local function popup(bufnr, coverable_windows)
 		{}
 	)
 
-	vim.api.nvim_create_autocmd({ "WinResized", "VimResized" }, {
+	vim.api.nvim_create_autocmd({ "WinResized" }, {
 		group = augroup_id,
 		callback = function()
 			if not util.is_open(popup_id) then
@@ -194,25 +194,39 @@ local function popup(bufnr, coverable_windows)
 			end
 			-- WinResized populates vim.v.event.windows but VimResized does not
 			-- so we default to listing all windows.
-			for _, x in
-				ipairs(
-					vim.v.event.windows
-						or vim.api.nvim_tabpage_list_wins(tab_id)
-				)
-			do
-				if
-					vim.list_contains(vim.api.nvim_tabpage_list_wins(tab_id), x)
-				then
-					local new_window_opts =
-						algo.construct_window_opts(coverable_windows, tab_id)
-					if new_window_opts then
-						resize_popup(popup_id, new_window_opts)
-					end
-					break
+			local changed_window = assert(
+				vim.v["event"]["windows"][1],
+				"no windows listed in WinResized event"
+			)
+			local changed_tab = vim.api.nvim_win_get_tabpage(changed_window)
+			if tab_id == changed_tab then
+				local new_window_opts =
+					algo.construct_window_opts(coverable_windows, tab_id)
+				if new_window_opts then
+					resize_popup(popup_id, new_window_opts)
 				end
 			end
 		end,
 	})
+
+	vim.api.nvim_create_autocmd({ "VimResized" }, {
+		group = augroup_id,
+		callback = function()
+			if not util.is_open(popup_id) then
+				internal.teardown_detour(popup_id)
+				return
+			end
+
+			local new_window_opts =
+				algo.construct_window_opts(coverable_windows, tab_id)
+			-- If there is an issue that prevents a valid configuration for the
+			-- detour, just leave it for the user to manually clean up.
+			if new_window_opts then
+				resize_popup(popup_id, new_window_opts)
+			end
+		end,
+	})
+
 	vim.api.nvim_create_autocmd({ "WinClosed" }, {
 		group = augroup_id,
 		pattern = "" .. popup_id,
