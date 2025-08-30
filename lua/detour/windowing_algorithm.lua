@@ -3,9 +3,9 @@ local M = {}
 local util = require("detour.util")
 
 local function is_statusline_global()
-	if vim.o.laststatus == 3 then
-		return false -- the statusline is global. No specific window has it.
-	end
+	-- When laststatus == 3, Neovim uses a single global statusline
+	-- and individual windows do not have their own.
+	return vim.o.laststatus == 3
 end
 
 function M.construct_window_opts(coverable_windows, tab_id)
