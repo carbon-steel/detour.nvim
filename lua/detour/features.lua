@@ -6,14 +6,13 @@ local internal = require("detour.internal")
 ---Update the detour window title to the current buffer path relative to cwd.
 ---@param window_id integer
 local function update_title(window_id)
-	-- Assumption: window_id is not closed as this was triggered from the fact that we are redrawing this window.
-	local buffer_id = vim.api.nvim_win_get_buf(window_id)
-	local path = vim.api.nvim_buf_get_name(buffer_id)
 	local tabwin = vim.fn.win_id2tabwin(window_id)
 	local tabnr, winnr = unpack(tabwin)
 	if tabnr == 0 and winnr == 0 then
 		return
 	end
+	local buffer_id = vim.api.nvim_win_get_buf(window_id)
+	local path = vim.api.nvim_buf_get_name(buffer_id)
 	local home = vim.fn.getcwd(winnr, tabnr)
 	local title = vim.fn.fnamemodify(path, ":.")
 	if title:sub(1, #home) == home then
