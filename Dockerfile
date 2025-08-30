@@ -1,4 +1,4 @@
-FROM alpine:3.21
+FROM alpine:3.22
 
 ENV LUA_MAJOR_VERSION 5.1
 ENV LUA_MINOR_VERSION 5
@@ -55,6 +55,6 @@ RUN rm $TMP_LOC -rf
 
 WORKDIR /mnt/luarocks
 
-RUN apk add 'neovim=0.10.2-r0'
+RUN apk add 'neovim=0.11.1-r1'
 ENV BUSTED_VERSION 2.1.2-3
 RUN luarocks install busted $BUSTED_VERSION
