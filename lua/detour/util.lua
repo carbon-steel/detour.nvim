@@ -1,7 +1,25 @@
 local M = {}
 
+---@class detour.util
+---@field Set fun(list: any[]): table<any, boolean>
+---@field contains_element fun(array: any[], target: any): boolean
+---@field contains_key fun(array: table, target: any): boolean
+---@field contains_value fun(array: table, target: any): boolean
+---@field get_text_area_dimensions fun(window_id: integer): integer, integer, integer, integer
+---@field is_floating fun(window_id: integer): boolean
+---@field get_maybe_zindex fun(window_id: integer): integer|nil
+---@field overlap fun(window_a: integer, window_b: integer): boolean
+---@field find_top_popup fun(window?: integer): integer
+---@field find_covered_bases fun(window_id: integer): integer[]
+---@field find_covered_windows fun(window_id: integer): integer[]
+---@field is_open fun(window_id: integer): boolean
+---@field stringify fun(number: integer): string
+---@field pairs_by_keys fun(t: table, f?: fun(a:any,b:any):boolean): fun(): any, any
+
 local internal = require("detour.internal")
 
+---@param list any[]
+---@return table<any, boolean>
 function M.Set(list)
 	local set = {}
 	for _, l in ipairs(list) do
@@ -10,6 +28,9 @@ function M.Set(list)
 	return set
 end
 
+---@param array any[]
+---@param target any
+---@return boolean
 function M.contains_element(array, target)
 	for _, value in ipairs(array) do
 		if value == target then
@@ -19,6 +40,9 @@ function M.contains_element(array, target)
 	return false
 end
 
+---@param array table
+---@param target any
+---@return boolean
 function M.contains_key(array, target)
 	for key, _ in pairs(array) do
 		if key == target then
@@ -28,6 +52,9 @@ function M.contains_key(array, target)
 	return false
 end
 
+---@param array table
+---@param target any
+---@return boolean
 function M.contains_value(array, target)
 	for _, value in pairs(array) do
 		if value == target then
@@ -37,9 +64,10 @@ function M.contains_value(array, target)
 	return false
 end
 
--- Returns the positions of top, bottom, left, and right of a given window's text area.
--- The statusline is not included in the text area.
--- bottom and right are exclusive
+--- Returns the positions of top, bottom, left, and right of a given window's text area.
+--- The statusline is not included in the text area. Bottom and right are exclusive.
+---@param window_id integer
+---@return integer top, integer bottom, integer left, integer right
 function M.get_text_area_dimensions(window_id)
 	local top, left = unpack(vim.api.nvim_win_get_position(window_id))
 	local bottom = top + vim.api.nvim_win_get_height(window_id)
@@ -47,15 +75,22 @@ function M.get_text_area_dimensions(window_id)
 	return top, bottom, left, right
 end
 
+---@param window_id integer
+---@return boolean
 function M.is_floating(window_id)
 	return vim.api.nvim_win_get_config(window_id).relative ~= ""
 end
 
--- Returns the zindex for the given window, if floating, otherwise nil.
+--- Returns the zindex for the given window, if floating, otherwise nil.
+---@param window_id integer
+---@return integer|nil
 function M.get_maybe_zindex(window_id)
 	return vim.api.nvim_win_get_config(window_id).zindex
 end
 
+---@param positions_a { [1]: integer, [2]: integer, [3]: integer, [4]: integer }
+---@param positions_b { [1]: integer, [2]: integer, [3]: integer, [4]: integer }
+---@return boolean
 local function overlap_helper(positions_a, positions_b)
 	local top_a, bottom_a, left_a, right_a = unpack(positions_a)
 	local top_b, bottom_b, left_b, right_b = unpack(positions_b)
@@ -70,6 +105,9 @@ local function overlap_helper(positions_a, positions_b)
 	return true
 end
 
+---@param window_a integer
+---@param window_b integer
+---@return boolean
 function M.overlap(window_a, window_b)
 	return overlap_helper(
 		{ M.get_text_area_dimensions(window_a) },
@@ -77,6 +115,8 @@ function M.overlap(window_a, window_b)
 	)
 end
 
+---@param window? integer
+---@return integer window_id
 function M.find_top_popup(window)
 	local window_id = window or vim.api.nvim_get_current_win()
 	local all_coverable_windows = internal.list_coverable_windows()
@@ -93,6 +133,8 @@ end
 
 -- Finds all base windows that are covered by the provided popup.
 -- If the provided window is not a popup, returns the given argument.
+---@param window_id integer
+---@return integer[]
 function M.find_covered_bases(window_id)
 	local current_window = window_id
 	local coverable_bases = nil
@@ -120,6 +162,8 @@ end
 
 -- Finds all windows that are covered by the provided popup.
 -- If the provided window is not a popup, returns the given argument.
+---@param window integer
+---@return integer[]
 function M.find_covered_windows(window)
 	local current_window = window
 	local coverable_windows = {}
@@ -148,10 +192,14 @@ function M.find_covered_windows(window)
 		:totable()
 end
 
+---@param window_id integer
+---@return boolean
 function M.is_open(window_id)
 	return vim.tbl_contains(vim.api.nvim_list_wins(), window_id)
 end
 
+---@param number integer
+---@return string
 function M.stringify(number)
 	local base = string.byte("a")
 	local values = {}
@@ -161,6 +209,9 @@ function M.stringify(number)
 	return string.char(unpack(values))
 end
 
+---@param t table
+---@param f? fun(a:any,b:any):boolean
+---@return fun(): any, any
 function M.pairs_by_keys(t, f)
 	local a = {}
 	for n in pairs(t) do
