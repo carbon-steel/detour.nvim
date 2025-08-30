@@ -19,10 +19,16 @@ M.setup = function(args)
 	local new_options = vim.tbl_deep_extend("force", defaults, args or {})
 
 	if not vim.tbl_contains({ "none", "path" }, new_options.title) then
-		vim.api.nvim_err_writeln(
-			'"'
-				.. tostring(new_options.title)
-				.. '" is an invalid value for title. Not changing detour configs.'
+		vim.api.nvim_echo(
+			{
+				{
+					'"'
+						.. tostring(new_options.title)
+						.. '" is an invalid value for title. Not changing detour configs.',
+				},
+			},
+			true,
+			{ err = true }
 		)
 		return
 	end
