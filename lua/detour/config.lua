@@ -13,7 +13,9 @@ M.setup = function(args)
 
 	if not vim.tbl_contains({ "none", "path" }, new_options.title) then
 		vim.api.nvim_err_writeln(
-			'"' .. M.options.title .. '" is an invalid value for title. Not changing detour configs.'
+			'"'
+				.. tostring(new_options.title)
+				.. '" is an invalid value for title. Not changing detour configs.'
 		)
 		return
 	end
