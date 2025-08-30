@@ -161,6 +161,11 @@ end
 ---@param layer integer?
 ---@return table
 function M.construct_nest(parent, layer)
+	assert(
+		util.is_open(parent),
+		"trying to construct a nested window in a window that doesn't exist: ",
+		parent
+	)
 	local top, bottom, left, right = util.get_text_area_dimensions(parent)
 	local width = right - left
 	local height = bottom - top
