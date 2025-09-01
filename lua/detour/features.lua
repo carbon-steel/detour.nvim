@@ -87,6 +87,24 @@ function M.UncoverWindow(window)
 	return ok
 end
 
+function M.HideAllDetours()
+	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+		if internal.is_detour(win) then
+			vim.api.nvim_win_set_config(win, { hide = true })
+		end
+	end
+	vim.cmd("redraw!")
+end
+
+function M.RevealAllDetours()
+	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+		if internal.is_detour(win) then
+			vim.api.nvim_win_set_config(win, { hide = false })
+		end
+	end
+	vim.cmd("redraw!")
+end
+
 function M.UncoverWindowWithMouse()
 	local prev_mouse = vim.o.mouse
 	if not prev_mouse:match("a") then
@@ -98,13 +116,7 @@ function M.UncoverWindowWithMouse()
 		{}
 	)
 
-	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-		if internal.is_detour(win) then
-			vim.api.nvim_win_set_config(win, { hide = true })
-		end
-	end
-	vim.cmd("redraw!")
-
+	M.HideAllDetours()
 	vim.g.detour_temp_uncover = 0
 	vim.cmd([[
         let c = getchar()
@@ -113,11 +125,7 @@ function M.UncoverWindowWithMouse()
         endif
     ]])
 
-	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-		if internal.is_detour(win) then
-			vim.api.nvim_win_set_config(win, { hide = false })
-		end
-	end
+	M.RevealAllDetours()
 
 	vim.o.mouse = prev_mouse
 	vim.cmd("echo '' | redraw!") -- clear the prompt
