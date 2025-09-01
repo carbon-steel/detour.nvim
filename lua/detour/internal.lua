@@ -13,7 +13,7 @@ local M = {}
 ---@field garbage_collect fun()
 
 ---@type table<integer, integer[]>
-local popup_to_coverable_windows = {}
+local popup_to_reserved_windows = {}
 
 ---@param window_id integer
 ---@return string
@@ -38,22 +38,22 @@ function M.teardown_detour(window_id)
 			)
 		end
 	end
-	popup_to_coverable_windows[window_id] = nil
+	popup_to_reserved_windows[window_id] = nil
 end
 
 ---@param popup_id integer
 ---@return integer[]|nil
 function M.get_coverable_windows(popup_id)
-	if popup_to_coverable_windows[popup_id] == nil then
+	if popup_to_reserved_windows[popup_id] == nil then
 		return nil
 	end
 
 	-- Clean up any windows that have already been closed
-	popup_to_coverable_windows[popup_id] = vim.tbl_filter(function(window_id)
+	popup_to_reserved_windows[popup_id] = vim.tbl_filter(function(window_id)
 		return vim.tbl_contains(vim.api.nvim_list_wins(), window_id)
-	end, popup_to_coverable_windows[popup_id])
+	end, popup_to_reserved_windows[popup_id])
 
-	return popup_to_coverable_windows[popup_id]
+	return popup_to_reserved_windows[popup_id]
 end
 
 ---@param popup_id integer
@@ -73,24 +73,46 @@ function M.record_popup(popup_id, coverable_windows)
 		}, true, { err = true })
 		return false
 	end
-	popup_to_coverable_windows[popup_id] = coverable_windows
+	popup_to_reserved_windows[popup_id] = coverable_windows
 	return true
 end
 
 ---@return integer[]
 function M.list_popups()
-	return vim.tbl_keys(popup_to_coverable_windows)
+	return vim.tbl_keys(popup_to_reserved_windows)
 end
 
 ---@return integer[]
 function M.list_reserved_windows()
 	local windows = vim.api.nvim_list_wins()
-	return vim.iter(vim.tbl_values(popup_to_coverable_windows))
+	return vim.iter(vim.tbl_values(popup_to_reserved_windows))
 		:flatten()
 		:filter(function(w)
 			return vim.tbl_contains(windows, w) -- make sure window is still open
 		end)
 		:totable()
+end
+
+---@param window integer
+---@return boolean
+function M.unreserve_window(window)
+	local copy = vim.tbl_extend("force", popup_to_reserved_windows, {})
+	for popup, reserved_windows in pairs(popup_to_reserved_windows) do
+		copy[popup] = vim.tbl_filter(function(reserved)
+			return reserved ~= window
+		end, reserved_windows)
+		if #copy[popup] == 0 then
+			vim.api.nvim_echo({
+				{
+					"[detour.nvim] A detour must have at least one window to float over. Detour id: "
+						.. popup,
+				},
+			}, true, { err = true })
+			return false
+		end
+	end
+	popup_to_reserved_windows = copy
+	return true
 end
 
 -- Neovim autocmd events are quite nuanced:
@@ -129,7 +151,7 @@ vim.api.nvim_create_autocmd({ "SafeState" }, {
 	group = group,
 	callback = function()
 		local covered_bases = {}
-		for popup in pairs(popup_to_coverable_windows) do
+		for popup in pairs(popup_to_reserved_windows) do
 			if require("detour.util").is_open(popup) then
 				-- No need to check floating windows since they should be
 				-- unfocusable

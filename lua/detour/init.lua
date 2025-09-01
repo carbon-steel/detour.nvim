@@ -58,7 +58,6 @@ end
 ---@return integer|nil popup_id
 local function popup_above_float()
 	local parent = vim.api.nvim_get_current_win()
-	local tab_id = vim.api.nvim_get_current_tabpage()
 
 	if vim.tbl_contains(internal.list_reserved_windows(), parent) then
 		vim.api.nvim_echo({
@@ -185,7 +184,8 @@ local function popup(bufnr, reserve_windows)
 	vim.api.nvim_create_autocmd({ "WinResized" }, {
 		group = augroup_id,
 		callback = function()
-			if not util.is_open(popup_id) then
+			local reserved = internal.get_coverable_windows(popup_id)
+			if reserved == nil then
 				internal.teardown_detour(popup_id)
 				return
 			end
@@ -198,7 +198,7 @@ local function popup(bufnr, reserve_windows)
 			local changed_tab = vim.api.nvim_win_get_tabpage(changed_window)
 			if tab_id == changed_tab then
 				local new_window_opts =
-					algo.construct_window_opts(reserve_windows, tab_id)
+					algo.construct_window_opts(reserved, tab_id)
 				if new_window_opts then
 					resize_popup(popup_id, new_window_opts)
 				end
@@ -209,13 +209,13 @@ local function popup(bufnr, reserve_windows)
 	vim.api.nvim_create_autocmd({ "VimResized" }, {
 		group = augroup_id,
 		callback = function()
-			if not util.is_open(popup_id) then
+			local reserved = internal.get_coverable_windows(popup_id)
+			if reserved == nil then
 				internal.teardown_detour(popup_id)
 				return
 			end
 
-			local new_window_opts =
-				algo.construct_window_opts(reserve_windows, tab_id)
+			local new_window_opts = algo.construct_window_opts(reserved, tab_id)
 			-- If there is an issue that prevents a valid configuration for the
 			-- detour, just leave it for the user to manually clean up.
 			if new_window_opts then
@@ -228,8 +228,9 @@ local function popup(bufnr, reserve_windows)
 		group = augroup_id,
 		pattern = "" .. popup_id,
 		callback = function()
+			local reserved = internal.get_coverable_windows(popup_id)
 			internal.teardown_detour(popup_id)
-			for _, base in ipairs(reserve_windows) do
+			for _, base in ipairs(reserved) do
 				if
 					vim.tbl_contains(
 						vim.api.nvim_tabpage_list_wins(tab_id),
