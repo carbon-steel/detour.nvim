@@ -76,4 +76,51 @@ function M.CloseOnLeave(popup_id)
 	})
 end
 
+---Prevent detours from covering the provided window.
+---@param window integer
+---@return boolean
+function M.UncoverWindow(window)
+	local ok = internal.unreserve_window(window)
+	if ok then
+		vim.api.nvim_exec_autocmds("VimResized", {})
+	end
+	return ok
+end
+
+function M.UncoverWindowWithMouse()
+	local prev_mouse = vim.o.mouse
+	if not prev_mouse:match("a") then
+		vim.o.mouse = "a"
+	end
+	vim.api.nvim_echo(
+		{ { "Click a window (Press any key to cancel)…", "Question" } },
+		false,
+		{}
+	)
+
+	vim.g.detour_temp_uncover = 0
+	vim.cmd([[
+        let c = getchar()
+        if c == "\<LeftMouse>" && v:mouse_win > 0
+            let g:detour_temp_uncover=1
+        endif
+    ]])
+
+	if vim.g.detour_temp_uncover == 0 then
+		vim.o.mouse = prev_mouse
+		return
+	end
+
+	local m = vim.fn.getmousepos()
+	local winid = util.base_at_screenpos(
+		vim.api.nvim_get_current_tabpage(),
+		m.screenrow,
+		m.screencol
+	)
+
+	vim.o.mouse = prev_mouse
+	vim.cmd("echo '' | redraw!") -- clear the prompt
+	M.UncoverWindow(winid)
+end
+
 return M

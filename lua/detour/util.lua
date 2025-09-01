@@ -231,4 +231,43 @@ function M.pairs_by_keys(t, f)
 	return iter
 end
 
+---Whether the statusline is global (laststatus == 3).
+---@return boolean
+function M.is_statusline_global()
+	-- When laststatus == 3, Neovim uses a single global statusline
+	-- and individual windows do not have their own.
+	return vim.o.laststatus == 3
+end
+
+---Find non-floating window at a given screen position (1-based)
+---@param tab_id integer
+---@param screenrow integer
+---@param screencol integer
+---@return integer|table
+function M.base_at_screenpos(tab_id, screenrow, screencol)
+	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tab_id)) do
+		if not M.is_floating(win) then
+			local winnr = vim.fn.win_id2win(win)
+			assert(winnr ~= 0, tostring(win) .. " was not found")
+			local top, left = unpack(vim.fn.win_screenpos(winnr))
+			assert(top ~= 0 and left ~= 0, tostring(winnr) .. " was not found")
+			local width = vim.fn.winwidth(winnr) -- includes signs/number column
+			local height = vim.fn.winheight(winnr)
+			if
+				screenrow >= top
+				and screenrow
+					< top
+						+ height
+						+ (M.is_statusline_global() and 0 or 1) -- for per-window statusline
+						+ 1 -- for the border and global statusline
+				and screencol >= left
+				and screencol < left + width
+			then
+				return win
+			end
+		end
+	end
+	return nil
+end
+
 return M

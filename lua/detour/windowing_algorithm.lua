@@ -2,14 +2,6 @@ local M = {}
 
 local util = require("detour.util")
 
----Whether the statusline is global (laststatus == 3).
----@return boolean
-local function is_statusline_global()
-	-- When laststatus == 3, Neovim uses a single global statusline
-	-- and individual windows do not have their own.
-	return vim.o.laststatus == 3
-end
-
 ---Compute float options to cover the given windows without overlapping others.
 ---@param coverable_windows integer[]
 ---@param tab_id integer
@@ -68,7 +60,7 @@ function M.construct_window_opts(coverable_windows, tab_id)
 			for _, uncoverable_window in ipairs(uncoverable_windows) do
 				local uncoverable_top, uncoverable_bottom, uncoverable_left, uncoverable_right =
 					util.get_text_area_dimensions(uncoverable_window)
-				if not is_statusline_global() then -- we have to worry about statuslines
+				if not util.is_statusline_global() then -- we have to worry about statuslines
 					-- The fact that we're starting with text area dimensions
 					-- means that all of the rectangles we are working with do
 					-- not include statuslines. This means that we need to avoid
