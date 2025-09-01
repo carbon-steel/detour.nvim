@@ -243,7 +243,7 @@ end
 ---@param tab_id integer
 ---@param screenrow integer
 ---@param screencol integer
----@return integer|table
+---@return integer|nil
 function M.base_at_screenpos(tab_id, screenrow, screencol)
 	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tab_id)) do
 		if not M.is_floating(win) then
