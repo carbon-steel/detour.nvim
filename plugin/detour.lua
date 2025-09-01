@@ -1,4 +1,5 @@
 local detour = require("detour")
+local features = require("detour.features")
 
 vim.api.nvim_create_user_command("Detour", detour.Detour, {})
 
@@ -10,6 +11,18 @@ vim.api.nvim_create_user_command(
 
 vim.api.nvim_create_user_command(
 	"DetourUncoverWindowWithMouse",
-	require("detour.features").UncoverWindowWithMouse,
+	features.UncoverWindowWithMouse,
+	{}
+)
+
+vim.api.nvim_create_user_command(
+	"DetourHideAllDetours",
+	features.HideAllDetours,
+	{}
+)
+
+vim.api.nvim_create_user_command(
+	"DetourRevealAllDetours",
+	features.RevealAllDetours,
 	{}
 )
