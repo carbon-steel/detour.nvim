@@ -41,6 +41,10 @@ function M.teardown_detour(window_id)
 	popup_to_reserved_windows[window_id] = nil
 end
 
+function M.is_detour(window)
+	return popup_to_reserved_windows[window] ~= nil
+end
+
 ---@param popup_id integer
 ---@return integer[]|nil
 function M.get_coverable_windows(popup_id)
