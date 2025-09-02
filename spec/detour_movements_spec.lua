@@ -187,7 +187,7 @@ describe("detour", function()
 		vim.opt.eventignore = "all" -- deactivate plugin
 		vim.api.nvim_set_current_win(base)
 		vim.opt.eventignore = "" -- reactivate plugin
-		vim.api.nvim_exec_autocmds("SafeState", {})
+		movements._safe_state_handler()
 		assert.same(popup, vim.api.nvim_get_current_win())
 	end)
 end)
