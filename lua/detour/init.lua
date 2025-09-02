@@ -209,6 +209,7 @@ local function popup(bufnr, reserve_windows)
 	vim.api.nvim_create_autocmd({ "VimResized" }, {
 		group = augroup_id,
 		callback = function()
+			internal.garbage_collect()
 			local reserved = internal.get_coverable_windows(popup_id)
 			if reserved == nil then
 				internal.teardown_detour(popup_id)
