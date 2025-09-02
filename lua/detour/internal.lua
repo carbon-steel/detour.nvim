@@ -180,10 +180,11 @@ vim.api.nvim_create_autocmd({ "SafeState" }, {
 	end,
 })
 
+local just_entered_window = false
 vim.api.nvim_create_autocmd({ "WinEnter" }, {
 	group = group,
 	callback = function()
-		vim.g.detour_just_entered_window = true
+		just_entered_window = true
 	end,
 })
 
@@ -193,8 +194,8 @@ vim.api.nvim_create_autocmd({ "CursorMoved", "ModeChanged" }, {
 	group = group,
 	callback = function()
 		-- Ignore this event if `WinEnter` just happened.
-		if vim.g.detour_just_entered_window == true then
-			vim.g.detour_just_entered_window = false
+		if just_entered_window == true then
+			just_entered_window = false
 			return
 		end
 
