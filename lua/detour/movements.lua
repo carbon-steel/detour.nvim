@@ -12,22 +12,24 @@
 local M = {}
 
 local util = require("detour.util")
-
--- detour_use_smart_window_movement will be set to true most of the time and
--- only set to false during specific operations. This is an internal variable
--- and the user should never touch it.
-local use_smart_movement = true
+local internal = require("detour.internal")
 
 local module_augroup = "detour-movements"
 vim.api.nvim_create_augroup(module_augroup, { clear = true })
 
-vim.api.nvim_create_autocmd({ "WinEnter" }, {
+---FOR TESTING ONLY
+M._safe_state_handler = function()
+	internal.garbage_collect()
+	vim.fn.win_gotoid(util.find_top_popup())
+end
+
+-- Sometimes the cursor can end up behind a detour (eg, when a window is
+-- closed). In these cases just move the cursor to an appropriate place.
+-- Using SafeState here means this autocmd will not interfere with automated
+-- movements.
+vim.api.nvim_create_autocmd({ "SafeState" }, {
 	group = module_augroup,
-	callback = function()
-		if use_smart_movement then
-			vim.fn.win_gotoid(util.find_top_popup())
-		end
-	end,
+	callback = M._safe_state_handler,
 	nested = true,
 })
 
@@ -56,13 +58,12 @@ function M.DetourWinCmdL()
 	end
 
 	if base then
-		use_smart_movement = false
 		vim.fn.win_gotoid(base)
-		use_smart_movement = true
 		vim.cmd.wincmd("l")
-		if use_smart_movement then
-			vim.fn.win_gotoid(util.find_top_popup())
-		end
+		-- It's possible to rely on the SafeState autocmd instead of explicitly
+		-- moving to the top popup, but an explicit call allows this function to work
+		-- properly when used in other code.
+		vim.fn.win_gotoid(util.find_top_popup())
 	end
 end
 
@@ -91,13 +92,9 @@ function M.DetourWinCmdH()
 	end
 
 	if base then
-		use_smart_movement = false
 		vim.fn.win_gotoid(base)
-		use_smart_movement = true
 		vim.cmd.wincmd("h")
-		if use_smart_movement then
-			vim.fn.win_gotoid(util.find_top_popup())
-		end
+		vim.fn.win_gotoid(util.find_top_popup())
 	end
 end
 
@@ -131,13 +128,9 @@ function M.DetourWinCmdJ()
 	end
 
 	if base then
-		use_smart_movement = false
 		vim.fn.win_gotoid(base)
-		use_smart_movement = true
 		vim.cmd.wincmd("j")
-		if use_smart_movement then
-			vim.fn.win_gotoid(util.find_top_popup())
-		end
+		vim.fn.win_gotoid(util.find_top_popup())
 	end
 end
 
@@ -166,11 +159,9 @@ function M.DetourWinCmdK()
 	end
 
 	if base then
-		use_smart_movement = false
 		vim.fn.win_gotoid(base)
 		vim.cmd.wincmd("k")
 		vim.fn.win_gotoid(util.find_top_popup())
-		use_smart_movement = true
 	end
 end
 
@@ -205,9 +196,7 @@ function M.DetourWinCmdW()
 		break
 	end
 
-	use_smart_movement = false
 	vim.fn.win_gotoid(ordered_tops[1])
-	use_smart_movement = true
 end
 
 return M
