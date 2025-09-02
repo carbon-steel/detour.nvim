@@ -100,11 +100,19 @@ end
 ---@param window integer
 ---@return boolean
 function M.unreserve_window(window)
+	M.garbage_collect()
+	local changed = false
 	local copy = vim.tbl_extend("force", popup_to_reserved_windows, {})
 	for popup, reserved_windows in pairs(popup_to_reserved_windows) do
-		copy[popup] = vim.tbl_filter(function(reserved)
-			return reserved ~= window
-		end, reserved_windows)
+		copy[popup] = vim.iter(reserved_windows)
+			:filter(function(reserved)
+				if reserved ~= window then
+					return true
+				end
+				changed = true
+				return false
+			end)
+			:totable()
 		if #copy[popup] == 0 then
 			vim.api.nvim_echo({
 				{
@@ -116,7 +124,7 @@ function M.unreserve_window(window)
 		end
 	end
 	popup_to_reserved_windows = copy
-	return true
+	return changed
 end
 
 -- Neovim autocmd events are quite nuanced:
@@ -168,6 +176,30 @@ vim.api.nvim_create_autocmd({ "SafeState" }, {
 		covered_bases = require("detour.util").Set(covered_bases)
 		if covered_bases[vim.api.nvim_get_current_win()] then
 			require("detour.movements").DetourWinCmdW()
+		end
+	end,
+})
+
+vim.api.nvim_create_autocmd({ "WinEnter" }, {
+	group = group,
+	callback = function()
+		vim.g.detour_just_entered_window = true
+	end,
+})
+
+-- If the user interacts with a window, we should prevent detours from covering
+-- it.
+vim.api.nvim_create_autocmd({ "CursorMoved", "ModeChanged" }, {
+	group = group,
+	callback = function()
+		-- Ignore this event if `WinEnter` just happened.
+		if vim.g.detour_just_entered_window == true then
+			vim.g.detour_just_entered_window = false
+			return
+		end
+
+		if M.unreserve_window(vim.api.nvim_get_current_win()) then
+			vim.api.nvim_exec_autocmds("VimResized", {})
 		end
 	end,
 })
