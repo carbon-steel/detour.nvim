@@ -1,3 +1,8 @@
+---@class detour.Public
+---@field Detour fun(): integer|nil
+---@field DetourCurrentWindow fun(): integer|nil
+---@field setup fun(args?: detour.config.Options)
+---@type detour.Public
 local M = {}
 
 local util = require("detour.util")
@@ -20,9 +25,9 @@ local function resize_popup(window_id, new_window_opts)
 	)
 
 	-- Not sure why this loop is necessary.
-    for _, covered_window in
-        ipairs(internal.get_reserved_windows(window_id) or {})
-    do
+	for _, covered_window in
+		ipairs(internal.get_reserved_windows(window_id) or {})
+	do
 		if util.is_floating(covered_window) then
 			vim.api.nvim_win_set_config(
 				covered_window,
@@ -184,7 +189,7 @@ local function popup(bufnr, reserve_windows)
 	vim.api.nvim_create_autocmd({ "WinResized" }, {
 		group = augroup_id,
 		callback = function()
-            local reserved = internal.get_reserved_windows(popup_id)
+			local reserved = internal.get_reserved_windows(popup_id)
 			if reserved == nil then
 				internal.teardown_detour(popup_id)
 				return
@@ -210,7 +215,7 @@ local function popup(bufnr, reserve_windows)
 		group = augroup_id,
 		callback = function()
 			internal.garbage_collect()
-            local reserved = internal.get_reserved_windows(popup_id)
+			local reserved = internal.get_reserved_windows(popup_id)
 			if reserved == nil then
 				internal.teardown_detour(popup_id)
 				return
@@ -229,7 +234,7 @@ local function popup(bufnr, reserve_windows)
 		group = augroup_id,
 		pattern = "" .. popup_id,
 		callback = function()
-            local reserved = internal.get_reserved_windows(popup_id)
+			local reserved = internal.get_reserved_windows(popup_id)
 			internal.teardown_detour(popup_id)
 			for _, base in ipairs(reserved) do
 				if

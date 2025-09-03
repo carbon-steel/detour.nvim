@@ -10,6 +10,9 @@ local M = {}
 ---@field list_popups fun(): integer[]
 ---@field list_reserved_windows fun(): integer[]
 ---@field garbage_collect fun()
+---@field is_detour fun(window: integer): boolean
+---@field get_reserved_windows fun(popup_id: integer): integer[]|nil
+---@field unreserve_window fun(window: integer): boolean
 
 ---@type table<integer, integer[]>
 local popup_to_reserved_windows = {}
