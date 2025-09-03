@@ -139,8 +139,8 @@ function M.find_covered_bases(window_id)
 	assert(M.is_open(window_id), tostring(window_id) .. " is not open")
 	local current_window = window_id
 	local coverable_bases = nil
-	while internal.get_coverable_windows(current_window) do
-		coverable_bases = internal.get_coverable_windows(current_window) or {}
+    while internal.get_reserved_windows(current_window) do
+        coverable_bases = internal.get_reserved_windows(current_window) or {}
 		assert(
 			#coverable_bases > 0,
 			"[detour.nvim] There should never be an empty array in popup_to_covered_windows."
@@ -148,7 +148,7 @@ function M.find_covered_bases(window_id)
 		-- We iterate on only the first covered window because there are two cases:
 		-- A: there is exactly one covered window and it's another detour.
 		-- B: there is one or more covered windows and none of them are detours. We've found our covered base windows. Hence, this would be the last iteration of this loop.
-		current_window = coverable_bases[1]
+        current_window = coverable_bases[1]
 	end
 
 	-- This covers the case where the window_id is not a detour popup and we never enter the above loop.
@@ -168,9 +168,9 @@ end
 function M.find_covered_windows(window)
 	local current_window = window
 	local coverable_windows = {}
-	while internal.get_coverable_windows(current_window) do
-		coverable_windows[#coverable_windows + 1] =
-			internal.get_coverable_windows(current_window)
+    while internal.get_reserved_windows(current_window) do
+        coverable_windows[#coverable_windows + 1] =
+            internal.get_reserved_windows(current_window)
 		assert(
 			#coverable_windows[#coverable_windows] > 0,
 			"[detour.nvim] There should never be an empty array in popup_to_covered_windows."
@@ -178,7 +178,7 @@ function M.find_covered_windows(window)
 		-- We iterate on only the first covered window because there are two cases:
 		-- A: there is exactly one covered window and it's another detour.
 		-- B: there is one or more covered windows and none of them are detours. We've found our covered base windows. Hence, this would be the last iteration of this loop.
-		current_window = coverable_windows[#coverable_windows][1]
+        current_window = coverable_windows[#coverable_windows][1]
 	end
 
 	if #coverable_windows == 0 then

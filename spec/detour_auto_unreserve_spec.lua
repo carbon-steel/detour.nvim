@@ -1,14 +1,6 @@
 local detour = require("detour")
 local util = require("detour.util")
 
-local function Set(list)
-	local set = {}
-	for _, l in ipairs(list) do
-		set[l] = true
-	end
-	return set
-end
-
 describe("detour auto-unreserve on interaction", function()
 	before_each(function()
 		vim.g.detour_testing = true

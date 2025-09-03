@@ -6,7 +6,6 @@ local M = {}
 ---@class detour.internal
 ---@field construct_augroup_name fun(window_id: integer): string
 ---@field teardown_detour fun(window_id: integer)
----@field get_coverable_windows fun(popup_id: integer): integer[]|nil
 ---@field record_popup fun(popup_id: integer, coverable_windows: integer[]): boolean
 ---@field list_popups fun(): integer[]
 ---@field list_reserved_windows fun(): integer[]
@@ -26,7 +25,7 @@ end
 function M.teardown_detour(window_id)
 	-- Be tolerant if the augroup was already removed by another path.
 	pcall(vim.api.nvim_del_augroup_by_name, M.construct_augroup_name(window_id))
-	for _, covered_window in ipairs(M.get_coverable_windows(window_id) or {}) do
+	for _, covered_window in ipairs(M.get_reserved_windows(window_id) or {}) do
 		if vim.api.nvim_win_get_config(covered_window).relative ~= "" then
 			vim.api.nvim_win_set_config(
 				covered_window,
@@ -47,7 +46,7 @@ end
 
 ---@param popup_id integer
 ---@return integer[]|nil
-function M.get_coverable_windows(popup_id)
+function M.get_reserved_windows(popup_id)
 	if popup_to_reserved_windows[popup_id] == nil then
 		return nil
 	end
