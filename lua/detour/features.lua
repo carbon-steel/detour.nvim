@@ -49,6 +49,9 @@ function M.ShowPathInTitle(popup_id)
 		pattern = "DetourUpdateTitle" .. util.stringify(popup_id),
 		group = internal.construct_augroup_name(popup_id),
 		callback = function()
+			if not util.is_open(popup_id) then
+				return true
+			end
 			update_title(popup_id)
 		end,
 	})
