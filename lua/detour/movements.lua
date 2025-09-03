@@ -48,8 +48,9 @@ vim.api.nvim_create_autocmd({ "SafeState" }, {
 --- If arriving into a window covered by a detour, switch into that detour.
 ---@return nil
 function M.DetourWinCmdL()
-	local covered_bases =
-		util.find_covered_bases(vim.api.nvim_get_current_win())
+	local covered_bases = util.find_covered_bases(
+		vim.api.nvim_get_current_win()
+	) or { vim.api.nvim_get_current_win() }
 	table.sort(covered_bases, function(windowA, windowB)
 		local _, _, _, rightA = util.get_text_area_dimensions(windowA)
 		local _, _, _, rightB = util.get_text_area_dimensions(windowB)
@@ -64,14 +65,12 @@ function M.DetourWinCmdL()
 		end
 	end
 
-	if base then
-		vim.fn.win_gotoid(base)
-		vim.cmd.wincmd("l")
-		-- It's possible to rely on the SafeState autocmd instead of explicitly
-		-- moving to the top popup, but an explicit call allows this function to work
-		-- properly when used in other code.
-		vim.fn.win_gotoid(util.find_top_popup())
-	end
+	vim.fn.win_gotoid(base)
+	vim.cmd.wincmd("l")
+	-- It's possible to rely on the SafeState autocmd instead of explicitly
+	-- moving to the top popup, but an explicit call allows this function to work
+	-- properly when used in other code.
+	vim.fn.win_gotoid(util.find_top_popup())
 end
 
 --- Switch windows to the left in "detour-aware" fashion.
@@ -82,8 +81,9 @@ end
 --- If arriving into a window covered by a detour, switch into that detour.
 ---@return nil
 function M.DetourWinCmdH()
-	local covered_bases =
-		util.find_covered_bases(vim.api.nvim_get_current_win())
+	local covered_bases = util.find_covered_bases(
+		vim.api.nvim_get_current_win()
+	) or { vim.api.nvim_get_current_win() }
 	table.sort(covered_bases, function(windowA, windowB)
 		local _, _, leftA, _ = util.get_text_area_dimensions(windowA)
 		local _, _, leftB, _ = util.get_text_area_dimensions(windowB)
@@ -98,11 +98,9 @@ function M.DetourWinCmdH()
 		end
 	end
 
-	if base then
-		vim.fn.win_gotoid(base)
-		vim.cmd.wincmd("h")
-		vim.fn.win_gotoid(util.find_top_popup())
-	end
+	vim.fn.win_gotoid(base)
+	vim.cmd.wincmd("h")
+	vim.fn.win_gotoid(util.find_top_popup())
 end
 
 --- Switch windows downwards in "detour-aware" fashion.
@@ -113,8 +111,9 @@ end
 --- If arriving into a window covered by a detour, switch into that detour.
 ---@return nil
 function M.DetourWinCmdJ()
-	local covered_bases =
-		util.find_covered_bases(vim.api.nvim_get_current_win())
+	local covered_bases = util.find_covered_bases(
+		vim.api.nvim_get_current_win()
+	) or { vim.api.nvim_get_current_win() }
 	table.sort(covered_bases, function(windowA, windowB)
 		local _, bottomA, _, _ = util.get_text_area_dimensions(windowA)
 		local _, bottomB, _, _ = util.get_text_area_dimensions(windowB)
@@ -134,11 +133,9 @@ function M.DetourWinCmdJ()
 		end
 	end
 
-	if base then
-		vim.fn.win_gotoid(base)
-		vim.cmd.wincmd("j")
-		vim.fn.win_gotoid(util.find_top_popup())
-	end
+	vim.fn.win_gotoid(base)
+	vim.cmd.wincmd("j")
+	vim.fn.win_gotoid(util.find_top_popup())
 end
 
 --- Switch windows upwards in "detour-aware" fashion.
@@ -149,8 +146,9 @@ end
 --- If arriving into a window covered by a detour, switch into that detour.
 ---@return nil
 function M.DetourWinCmdK()
-	local covered_bases =
-		util.find_covered_bases(vim.api.nvim_get_current_win())
+	local covered_bases = util.find_covered_bases(
+		vim.api.nvim_get_current_win()
+	) or { vim.api.nvim_get_current_win() }
 	table.sort(covered_bases, function(windowA, windowB)
 		local topA, _, _, _ = util.get_text_area_dimensions(windowA)
 		local topB, _, _, _ = util.get_text_area_dimensions(windowB)
@@ -165,11 +163,9 @@ function M.DetourWinCmdK()
 		end
 	end
 
-	if base then
-		vim.fn.win_gotoid(base)
-		vim.cmd.wincmd("k")
-		vim.fn.win_gotoid(util.find_top_popup())
-	end
+	vim.fn.win_gotoid(base)
+	vim.cmd.wincmd("k")
+	vim.fn.win_gotoid(util.find_top_popup())
 end
 
 --- Switch windows in a cycle in "detour-aware" fashion.
