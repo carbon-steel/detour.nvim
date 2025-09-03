@@ -15,6 +15,8 @@ local M = {}
 ---@field is_open fun(window_id: integer): boolean
 ---@field stringify fun(number: integer): string
 ---@field pairs_by_keys fun(t: table, f?: fun(a:any,b:any):boolean): fun(): any, any
+---@field is_statusline_global fun(): boolean
+---@field base_at_screenpos fun(tab_id: integer, screenrow: integer, screencol: integer): integer|nil
 
 local internal = require("detour.internal")
 

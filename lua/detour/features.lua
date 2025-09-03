@@ -1,3 +1,11 @@
+---@class detour.features
+---@field ShowPathInTitle fun(popup_id: integer)
+---@field CloseOnLeave fun(popup_id: integer)
+---@field UncoverWindow fun(window: integer): boolean
+---@field HideAllDetours fun()
+---@field RevealAllDetours fun()
+---@field UncoverWindowWithMouse fun()
+---@field CloseCurrentStack fun(): boolean
 local M = {}
 
 local util = require("detour.util")
@@ -90,6 +98,8 @@ function M.UncoverWindow(window)
 	return ok
 end
 
+---Temporarily hide all detours in current tabpage.
+---@return nil
 function M.HideAllDetours()
 	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
 		if internal.is_detour(win) then
@@ -99,6 +109,8 @@ function M.HideAllDetours()
 	vim.cmd("redraw!")
 end
 
+---Reveal all detours previously hidden in current tabpage.
+---@return nil
 function M.RevealAllDetours()
 	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
 		if internal.is_detour(win) then
@@ -108,6 +120,8 @@ function M.RevealAllDetours()
 	vim.cmd("redraw!")
 end
 
+---Prompt to click a window and mark it as uncovered by detours.
+---@return nil
 function M.UncoverWindowWithMouse()
 	local prev_mouse = vim.o.mouse
 	if not prev_mouse:match("a") then

@@ -9,6 +9,13 @@
 
 ---@tag detour.movements
 
+---@class detour.movements
+---@field DetourWinCmdL fun()
+---@field DetourWinCmdH fun()
+---@field DetourWinCmdJ fun()
+---@field DetourWinCmdK fun()
+---@field DetourWinCmdW fun()
+---@field _safe_state_handler fun(): nil
 local M = {}
 
 local util = require("detour.util")
