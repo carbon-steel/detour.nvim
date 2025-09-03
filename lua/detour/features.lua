@@ -150,4 +150,30 @@ function M.UncoverWindowWithMouse()
 	end
 end
 
+---Close the current detour and all of its parent detours.
+---
+--- Finds the detour covering the current window (if any), walks up its
+--- parent chain, and closes each detour from child to parent. When not inside
+--- a detour, this function is a no-op.
+---@return nil
+function M.CloseCurrentStack()
+	internal.garbage_collect()
+
+	local current_window = vim.api.nvim_get_current_win()
+	local covered = internal.get_reserved_windows(current_window)
+	while covered do
+		local parent = covered[1]
+		vim.api.nvim_win_close(current_window, false)
+		if vim.api.nvim_get_current_win() == current_window then
+			-- Close operation failed
+			return false
+		end
+		vim.fn.win_gotoid(parent)
+		current_window = parent
+		covered = internal.get_reserved_windows(vim.api.nvim_get_current_win())
+	end
+
+	return true
+end
+
 return M

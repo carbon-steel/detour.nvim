@@ -26,3 +26,9 @@ vim.api.nvim_create_user_command(
 	features.RevealAllDetours,
 	{}
 )
+
+vim.api.nvim_create_user_command(
+	"DetourCloseCurrentStack",
+	features.CloseCurrentStack,
+	{}
+)
