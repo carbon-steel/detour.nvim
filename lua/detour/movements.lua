@@ -1,3 +1,4 @@
+---@mod detour.movements
 ---@brief [[
 --- The `detour.movements` module introduces backward-incompatible changes.
 --- Users who `require` this module will enable autocmds that enhance their
@@ -16,7 +17,7 @@
 ---@field DetourWinCmdK fun()
 ---@field DetourWinCmdW fun()
 ---@field _safe_state_handler fun(): nil
-local M = {}
+local movements = {}
 
 local util = require("detour.util")
 local internal = require("detour.internal")
@@ -25,7 +26,7 @@ local module_augroup = "detour-movements"
 vim.api.nvim_create_augroup(module_augroup, { clear = true })
 
 ---FOR TESTING ONLY
-M._safe_state_handler = function()
+movements._safe_state_handler = function()
 	internal.garbage_collect()
 	vim.fn.win_gotoid(util.find_top_popup())
 end
@@ -36,7 +37,7 @@ end
 -- movements.
 vim.api.nvim_create_autocmd({ "SafeState" }, {
 	group = module_augroup,
-	callback = M._safe_state_handler,
+	callback = movements._safe_state_handler,
 	nested = true,
 })
 
@@ -47,7 +48,7 @@ vim.api.nvim_create_autocmd({ "SafeState" }, {
 ---
 --- If arriving into a window covered by a detour, switch into that detour.
 ---@return nil
-function M.DetourWinCmdL()
+function movements.DetourWinCmdL()
 	local covered_bases = util.find_covered_bases(
 		vim.api.nvim_get_current_win()
 	) or { vim.api.nvim_get_current_win() }
@@ -80,7 +81,7 @@ end
 ---
 --- If arriving into a window covered by a detour, switch into that detour.
 ---@return nil
-function M.DetourWinCmdH()
+function movements.DetourWinCmdH()
 	local covered_bases = util.find_covered_bases(
 		vim.api.nvim_get_current_win()
 	) or { vim.api.nvim_get_current_win() }
@@ -110,7 +111,7 @@ end
 ---
 --- If arriving into a window covered by a detour, switch into that detour.
 ---@return nil
-function M.DetourWinCmdJ()
+function movements.DetourWinCmdJ()
 	local covered_bases = util.find_covered_bases(
 		vim.api.nvim_get_current_win()
 	) or { vim.api.nvim_get_current_win() }
@@ -145,7 +146,7 @@ end
 ---
 --- If arriving into a window covered by a detour, switch into that detour.
 ---@return nil
-function M.DetourWinCmdK()
+function movements.DetourWinCmdK()
 	local covered_bases = util.find_covered_bases(
 		vim.api.nvim_get_current_win()
 	) or { vim.api.nvim_get_current_win() }
@@ -173,7 +174,7 @@ end
 --- Calls `vim.cmd.wincmd('w')` if arriving into a window covered by a detour,
 --- switch into that detour.
 ---@return nil
-function M.DetourWinCmdW()
+function movements.DetourWinCmdW()
 	local windows = vim.api.nvim_tabpage_list_wins(0)
 	local current_top = util.find_top_popup()
 
@@ -202,4 +203,4 @@ function M.DetourWinCmdW()
 	vim.fn.win_gotoid(ordered_tops[1])
 end
 
-return M
+return movements

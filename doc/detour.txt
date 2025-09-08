@@ -1,0 +1,189 @@
+==============================================================================
+                                                                        *detour*
+
+                                                                        *detour*
+detour                                                                  *detour*
+
+
+detour.Detour()                                                  *detour.Detour*
+    Open a detour popup
+
+    Returns: ~
+        (integer|nil)  popup_id
+
+
+detour.DetourCurrentWindow()                        *detour.DetourCurrentWindow*
+    Open a detour popup covering only the current window.
+
+    Returns: ~
+        (integer|nil)  popup_id
+
+
+detour.setup                                                      *detour.setup*
+
+    Type: ~
+        (fun(args?:detour.config.Options))
+
+
+==============================================================================
+                                                               *detour.features*
+
+ Optional detour.nvim features.
+
+ Utilities to enhance behavior of detour popups (titles, auto-close,
+ temporary hiding/revealing, uncovering with mouse, etc.).
+
+                                                               *detour.features*
+detour.features                                                *detour.features*
+
+    Fields: ~
+        {ShowPathInTitle}         (fun(popup_id:integer))
+        {CloseOnLeave}            (fun(popup_id:integer))
+        {UncoverWindow}           (fun(window:integer):boolean)
+        {HideAllDetours}          (fun())
+        {RevealAllDetours}        (fun())
+        {UncoverWindowWithMouse}  (fun())
+        {CloseCurrentStack}       (fun():boolean)
+
+
+features.ShowPathInTitle({popup_id})                  *features.ShowPathInTitle*
+    Show the buffer path in the given popup's title and keep it updated.
+
+    Parameters: ~
+        {popup_id}  (integer)
+
+
+features.CloseOnLeave({popup_id})                        *features.CloseOnLeave*
+    Close the popup when focus leaves to a non-floating window.
+
+    Parameters: ~
+        {popup_id}  (integer)
+
+
+features.UncoverWindow({window})                        *features.UncoverWindow*
+    Prevent detours from covering the provided window.
+
+    Parameters: ~
+        {window}  (integer)
+
+    Returns: ~
+        (boolean)
+
+
+features.HideAllDetours()                              *features.HideAllDetours*
+    Temporarily hide all detours in current tabpage.
+
+    Returns: ~
+        (nil)
+
+
+features.RevealAllDetours()                          *features.RevealAllDetours*
+    Reveal all detours previously hidden in current tabpage.
+
+    Returns: ~
+        (nil)
+
+
+features.UncoverWindowWithMouse()              *features.UncoverWindowWithMouse*
+    Prompt to click a window and mark it as uncovered by detours.
+
+    Returns: ~
+        (nil)
+
+
+features.CloseCurrentStack()                        *features.CloseCurrentStack*
+    Close the current detour and all of its parent detours.
+
+     Finds the detour covering the current window (if any), walks up its
+     parent chain, and closes each detour from child to parent. When not inside
+     a detour, this function is a no-op.
+
+    Returns: ~
+        (nil)
+
+
+==============================================================================
+                                                              *detour.movements*
+
+ The `detour.movements` module introduces backward-incompatible changes.
+ Users who `require` this module will enable autocmds that enhance their
+ window switching to be "detour-aware". Those who do not require this module
+ will keep the standard window switching behavior. Encapsulating this logic
+ in a module allows users to opt-in to the new behavior instead of having the
+ behavior change from under their feet.
+
+                                                              *detour.movements*
+detour.movements                                              *detour.movements*
+
+    Fields: ~
+        {DetourWinCmdL}        (fun())
+        {DetourWinCmdH}        (fun())
+        {DetourWinCmdJ}        (fun())
+        {DetourWinCmdK}        (fun())
+        {DetourWinCmdW}        (fun())
+        {_safe_state_handler}  (fun():nil)
+
+
+movements._safe_state_handler()                  *movements._safe_state_handler*
+    FOR TESTING ONLY
+
+
+movements.DetourWinCmdL()                              *movements.DetourWinCmdL*
+     Switch windows to the right in "detour-aware" fashion.
+
+     If moving away from a detour, move first to a base window and perform
+     `vim.cmd.wincmd('l').`
+
+     If arriving into a window covered by a detour, switch into that detour.
+
+    Returns: ~
+        (nil)
+
+
+movements.DetourWinCmdH()                              *movements.DetourWinCmdH*
+     Switch windows to the left in "detour-aware" fashion.
+
+     If moving away from a detour, move first to a base window and perform
+     `vim.cmd.wincmd('h').`
+
+     If arriving into a window covered by a detour, switch into that detour.
+
+    Returns: ~
+        (nil)
+
+
+movements.DetourWinCmdJ()                              *movements.DetourWinCmdJ*
+     Switch windows downwards in "detour-aware" fashion.
+
+     If moving away from a detour, move first to a base window and perform
+     `vim.cmd.wincmd('j').`
+
+     If arriving into a window covered by a detour, switch into that detour.
+
+    Returns: ~
+        (nil)
+
+
+movements.DetourWinCmdK()                              *movements.DetourWinCmdK*
+     Switch windows upwards in "detour-aware" fashion.
+
+     If moving away from a detour, move first to a base window and perform
+     `vim.cmd.wincmd('k').`
+
+     If arriving into a window covered by a detour, switch into that detour.
+
+    Returns: ~
+        (nil)
+
+
+movements.DetourWinCmdW()                              *movements.DetourWinCmdW*
+     Switch windows in a cycle in "detour-aware" fashion.
+
+     Calls `vim.cmd.wincmd('w')` if arriving into a window covered by a detour,
+     switch into that detour.
+
+    Returns: ~
+        (nil)
+
+
+vim:tw=78:ts=8:noet:ft=help:norl:

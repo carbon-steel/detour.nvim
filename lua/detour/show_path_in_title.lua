@@ -1,3 +1,6 @@
+---@mod detour.show_path_in_title
+---Internal helper for updating popup titles.
+
 -- Put this code in its own library to make sure it's only run once.
 
 local util = require("detour.util")

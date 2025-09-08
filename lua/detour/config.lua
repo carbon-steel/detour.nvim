@@ -1,7 +1,10 @@
-local M = {}
+---@mod detour.config
+---User configuration and defaults for detour.nvim.
 
 ---@class detour.config.Options
 ---@field title "none"|"path"
+
+local config = {}
 
 ---@type detour.config.Options
 local defaults = {
@@ -9,33 +12,30 @@ local defaults = {
 }
 
 ---@type detour.config.Options
-M.options = {}
+config.options = {}
 
 ---Setup detour.nvim configuration.
 ---@param args? detour.config.Options
-M.setup = function(args)
+config.setup = function(args)
 	args = args or {}
 
-	local new_options = vim.tbl_deep_extend("force", defaults, args or {})
+	local new_options =
+		vim.tbl_deep_extend("force", defaults, config.options, args or {})
 
 	if not vim.tbl_contains({ "none", "path" }, new_options.title) then
-		vim.api.nvim_echo(
+		vim.api.nvim_echo({
 			{
-				{
-					'"'
-						.. tostring(new_options.title)
-						.. '" is an invalid value for title. Not changing detour configs.',
-				},
+				'"'
+					.. tostring(new_options.title)
+					.. '" is an invalid value for title. Not changing detour configs.',
 			},
-			true,
-			{ err = true }
-		)
+		}, true, { err = true })
 		return
 	end
 
-	M.options = new_options
+	config.options = new_options
 end
 
-M.setup()
+config.setup()
 
-return M
+return config
