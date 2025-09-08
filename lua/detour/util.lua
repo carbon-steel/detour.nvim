@@ -1,4 +1,7 @@
-local M = {}
+---@mod detour.util
+---Utilities for window geometry, state checks, and helpers.
+
+local util = {}
 
 ---@class detour.util
 ---@field Set fun(list: any[]): table<any, boolean>
@@ -22,7 +25,7 @@ local internal = require("detour.internal")
 
 ---@param list any[]
 ---@return table<any, boolean>
-function M.Set(list)
+function util.Set(list)
 	local set = {}
 	for _, l in ipairs(list) do
 		set[l] = true
@@ -33,7 +36,7 @@ end
 ---@param array any[]
 ---@param target any
 ---@return boolean
-function M.contains_element(array, target)
+function util.contains_element(array, target)
 	for _, value in ipairs(array) do
 		if value == target then
 			return true
@@ -45,7 +48,7 @@ end
 ---@param array table
 ---@param target any
 ---@return boolean
-function M.contains_key(array, target)
+function util.contains_key(array, target)
 	for key, _ in pairs(array) do
 		if key == target then
 			return true
@@ -57,7 +60,7 @@ end
 ---@param array table
 ---@param target any
 ---@return boolean
-function M.contains_value(array, target)
+function util.contains_value(array, target)
 	for _, value in pairs(array) do
 		if value == target then
 			return true
@@ -70,7 +73,7 @@ end
 --- The statusline is not included in the text area. Bottom and right are exclusive.
 ---@param window_id integer
 ---@return integer top, integer bottom, integer left, integer right
-function M.get_text_area_dimensions(window_id)
+function util.get_text_area_dimensions(window_id)
 	local top, left = unpack(vim.api.nvim_win_get_position(window_id))
 	local bottom = top + vim.api.nvim_win_get_height(window_id)
 	local right = left + vim.api.nvim_win_get_width(window_id)
@@ -79,14 +82,14 @@ end
 
 ---@param window_id integer
 ---@return boolean
-function M.is_floating(window_id)
+function util.is_floating(window_id)
 	return vim.api.nvim_win_get_config(window_id).relative ~= ""
 end
 
 --- Returns the zindex for the given window, if floating, otherwise nil.
 ---@param window_id integer
 ---@return integer|nil
-function M.get_maybe_zindex(window_id)
+function util.get_maybe_zindex(window_id)
 	return vim.api.nvim_win_get_config(window_id).zindex
 end
 
@@ -110,22 +113,22 @@ end
 ---@param window_a integer
 ---@param window_b integer
 ---@return boolean
-function M.overlap(window_a, window_b)
+function util.overlap(window_a, window_b)
 	return overlap_helper(
-		{ M.get_text_area_dimensions(window_a) },
-		{ M.get_text_area_dimensions(window_b) }
+		{ util.get_text_area_dimensions(window_a) },
+		{ util.get_text_area_dimensions(window_b) }
 	)
 end
 
 ---@param window? integer
 ---@return integer window_id
-function M.find_top_popup(window)
+function util.find_top_popup(window)
 	local window_id = window or vim.api.nvim_get_current_win()
 	local all_coverable_windows = internal.list_reserved_windows()
 	for _, popup in ipairs(internal.list_popups()) do
 		if
 			not vim.list_contains(all_coverable_windows, popup) -- ignore popups with popups nested in them
-			and vim.tbl_contains(M.find_covered_windows(popup), window_id)
+			and vim.tbl_contains(util.find_covered_windows(popup), window_id)
 		then
 			return popup
 		end
@@ -137,8 +140,8 @@ end
 -- If the provided window is not a popup, returns the given argument.
 ---@param window_id integer
 ---@return integer[]|nil
-function M.find_covered_bases(window_id)
-	assert(M.is_open(window_id), tostring(window_id) .. " is not open")
+function util.find_covered_bases(window_id)
+	assert(util.is_open(window_id), tostring(window_id) .. " is not open")
 	local current_window = window_id
 	local coverable_bases = nil
 	while internal.get_reserved_windows(current_window) do
@@ -159,7 +162,7 @@ function M.find_covered_bases(window_id)
 	end
 
 	return vim.tbl_filter(function(base)
-		return M.overlap(base, window_id)
+		return util.overlap(base, window_id)
 	end, coverable_bases)
 end
 
@@ -167,7 +170,7 @@ end
 -- If the provided window is not a popup, returns the given argument.
 ---@param window integer
 ---@return integer[]
-function M.find_covered_windows(window)
+function util.find_covered_windows(window)
 	local current_window = window
 	local coverable_windows = {}
 	while internal.get_reserved_windows(current_window) do
@@ -190,20 +193,20 @@ function M.find_covered_windows(window)
 	return vim.iter(coverable_windows)
 		:flatten()
 		:filter(function(other)
-			return M.overlap(other, window)
+			return util.overlap(other, window)
 		end)
 		:totable()
 end
 
 ---@param window_id integer
 ---@return boolean
-function M.is_open(window_id)
+function util.is_open(window_id)
 	return vim.tbl_contains(vim.api.nvim_list_wins(), window_id)
 end
 
 ---@param number integer
 ---@return string
-function M.stringify(number)
+function util.stringify(number)
 	local base = string.byte("a")
 	local values = {}
 	for digit in ("" .. number):gmatch(".") do
@@ -215,7 +218,7 @@ end
 ---@param t table
 ---@param f? fun(a:any,b:any):boolean
 ---@return fun(): any, any
-function M.pairs_by_keys(t, f)
+function util.pairs_by_keys(t, f)
 	local a = {}
 	for n in pairs(t) do
 		table.insert(a, n)
@@ -235,7 +238,7 @@ end
 
 ---Whether the statusline is global (laststatus == 3).
 ---@return boolean
-function M.is_statusline_global()
+function util.is_statusline_global()
 	-- When laststatus == 3, Neovim uses a single global statusline
 	-- and individual windows do not have their own.
 	return vim.o.laststatus == 3
@@ -246,9 +249,9 @@ end
 ---@param screenrow integer
 ---@param screencol integer
 ---@return integer|nil
-function M.base_at_screenpos(tab_id, screenrow, screencol)
+function util.base_at_screenpos(tab_id, screenrow, screencol)
 	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tab_id)) do
-		if not M.is_floating(win) then
+		if not util.is_floating(win) then
 			local winnr = vim.fn.win_id2win(win)
 			assert(winnr ~= 0, tostring(win) .. " was not found")
 			local top, left = unpack(vim.fn.win_screenpos(winnr))
@@ -260,7 +263,7 @@ function M.base_at_screenpos(tab_id, screenrow, screencol)
 				and screenrow
 					< top
 						+ height
-						+ (M.is_statusline_global() and 0 or 1) -- for per-window statusline
+						+ (util.is_statusline_global() and 0 or 1) -- for per-window statusline
 						+ 1 -- for the border and global statusline
 				and screencol >= left
 				and screencol < left + width
@@ -272,4 +275,4 @@ function M.base_at_screenpos(tab_id, screenrow, screencol)
 	return nil
 end
 
-return M
+return util

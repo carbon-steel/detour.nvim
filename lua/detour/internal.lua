@@ -1,7 +1,10 @@
 -- DO NOT DEPEND ON THIS FILE!
 -- This is an "internal" file and can have breaking changes without warning.
 
-local M = {}
+---@mod detour.internal
+---Internal implementation details. Not part of the public API.
+
+local internal = {}
 
 ---@class detour.internal
 ---@field construct_augroup_name fun(window_id: integer): string
@@ -19,16 +22,21 @@ local popup_to_reserved_windows = {}
 
 ---@param window_id integer
 ---@return string
-function M.construct_augroup_name(window_id)
+function internal.construct_augroup_name(window_id)
 	return "detour-" .. window_id
 end
 
 -- Needs to be idempotent
 ---@param window_id integer
-function M.teardown_detour(window_id)
+function internal.teardown_detour(window_id)
 	-- Be tolerant if the augroup was already removed by another path.
-	pcall(vim.api.nvim_del_augroup_by_name, M.construct_augroup_name(window_id))
-	for _, covered_window in ipairs(M.get_reserved_windows(window_id) or {}) do
+	pcall(
+		vim.api.nvim_del_augroup_by_name,
+		internal.construct_augroup_name(window_id)
+	)
+	for _, covered_window in
+		ipairs(internal.get_reserved_windows(window_id) or {})
+	do
 		if vim.api.nvim_win_get_config(covered_window).relative ~= "" then
 			vim.api.nvim_win_set_config(
 				covered_window,
@@ -43,13 +51,13 @@ function M.teardown_detour(window_id)
 	popup_to_reserved_windows[window_id] = nil
 end
 
-function M.is_detour(window)
+function internal.is_detour(window)
 	return popup_to_reserved_windows[window] ~= nil
 end
 
 ---@param popup_id integer
 ---@return integer[]|nil
-function M.get_reserved_windows(popup_id)
+function internal.get_reserved_windows(popup_id)
 	if popup_to_reserved_windows[popup_id] == nil then
 		return nil
 	end
@@ -65,7 +73,7 @@ end
 ---@param popup_id integer
 ---@param coverable_windows integer[]
 ---@return boolean
-function M.record_popup(popup_id, coverable_windows)
+function internal.record_popup(popup_id, coverable_windows)
 	local open_windows = vim.api.nvim_list_wins()
 	coverable_windows = vim.tbl_filter(function(window_id)
 		return vim.tbl_contains(open_windows, window_id)
@@ -84,12 +92,12 @@ function M.record_popup(popup_id, coverable_windows)
 end
 
 ---@return integer[]
-function M.list_popups()
+function internal.list_popups()
 	return vim.tbl_keys(popup_to_reserved_windows)
 end
 
 ---@return integer[]
-function M.list_reserved_windows()
+function internal.list_reserved_windows()
 	local windows = vim.api.nvim_list_wins()
 	return vim.iter(vim.tbl_values(popup_to_reserved_windows))
 		:flatten()
@@ -101,8 +109,8 @@ end
 
 ---@param window integer
 ---@return boolean
-function M.unreserve_window(window)
-	M.garbage_collect()
+function internal.unreserve_window(window)
+	internal.garbage_collect()
 	local changed = false
 	local copy = vim.tbl_extend("force", popup_to_reserved_windows, {})
 	for popup, reserved_windows in pairs(popup_to_reserved_windows) do
@@ -140,10 +148,10 @@ end
 -- must make sure to update the plugin's state before executing each user
 -- command. Also, we must double check what windows are still open during this
 -- plugin's autocmd callbacks.
-function M.garbage_collect()
-	for _, popup_id in ipairs(M.list_popups()) do
+function internal.garbage_collect()
+	for _, popup_id in ipairs(internal.list_popups()) do
 		if not vim.tbl_contains(vim.api.nvim_list_wins(), popup_id) then
-			M.teardown_detour(popup_id)
+			internal.teardown_detour(popup_id)
 		end
 	end
 end
@@ -151,7 +159,7 @@ end
 assert(
 	vim.fn.timer_start(
 		300,
-		vim.schedule_wrap(M.garbage_collect),
+		vim.schedule_wrap(internal.garbage_collect),
 		{ ["repeat"] = -1 }
 	) ~= -1,
 	"[detour.nvim] Failed to create garbage_collect timer."
@@ -178,10 +186,10 @@ vim.api.nvim_create_autocmd({ "CursorMoved", "ModeChanged" }, {
 			return
 		end
 
-		if M.unreserve_window(vim.api.nvim_get_current_win()) then
+		if internal.unreserve_window(vim.api.nvim_get_current_win()) then
 			vim.api.nvim_exec_autocmds("VimResized", {})
 		end
 	end,
 })
 
-return M
+return internal

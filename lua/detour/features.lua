@@ -1,3 +1,12 @@
+---@mod detour.features
+---@brief [[
+--- Optional detour.nvim features.
+---
+--- Utilities to enhance behavior of detour popups (titles, auto-close,
+--- temporary hiding/revealing, uncovering with mouse, etc.).
+---@brief ]]
+---@tag detour.features
+
 ---@class detour.features
 ---@field ShowPathInTitle fun(popup_id: integer)
 ---@field CloseOnLeave fun(popup_id: integer)
@@ -6,7 +15,7 @@
 ---@field RevealAllDetours fun()
 ---@field UncoverWindowWithMouse fun()
 ---@field CloseCurrentStack fun(): boolean
-local M = {}
+local features = {}
 
 local util = require("detour.util")
 local internal = require("detour.internal")
@@ -38,7 +47,7 @@ end
 
 ---Show the buffer path in the given popup's title and keep it updated.
 ---@param popup_id integer
-function M.ShowPathInTitle(popup_id)
+function features.ShowPathInTitle(popup_id)
 	require("detour.show_path_in_title")
 
 	if
@@ -67,7 +76,7 @@ end
 
 ---Close the popup when focus leaves to a non-floating window.
 ---@param popup_id integer
-function M.CloseOnLeave(popup_id)
+function features.CloseOnLeave(popup_id)
 	-- This autocmd will close the created detour popup when you focus on a different window.
 	vim.api.nvim_create_autocmd({ "WinEnter" }, {
 		group = internal.construct_augroup_name(popup_id),
@@ -90,7 +99,7 @@ end
 ---Prevent detours from covering the provided window.
 ---@param window integer
 ---@return boolean
-function M.UncoverWindow(window)
+function features.UncoverWindow(window)
 	local ok = internal.unreserve_window(window)
 	if ok then
 		vim.api.nvim_exec_autocmds("VimResized", {})
@@ -100,7 +109,7 @@ end
 
 ---Temporarily hide all detours in current tabpage.
 ---@return nil
-function M.HideAllDetours()
+function features.HideAllDetours()
 	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
 		if internal.is_detour(win) then
 			vim.api.nvim_win_set_config(win, { hide = true })
@@ -111,7 +120,7 @@ end
 
 ---Reveal all detours previously hidden in current tabpage.
 ---@return nil
-function M.RevealAllDetours()
+function features.RevealAllDetours()
 	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
 		if internal.is_detour(win) then
 			vim.api.nvim_win_set_config(win, { hide = false })
@@ -122,7 +131,7 @@ end
 
 ---Prompt to click a window and mark it as uncovered by detours.
 ---@return nil
-function M.UncoverWindowWithMouse()
+function features.UncoverWindowWithMouse()
 	local prev_mouse = vim.o.mouse
 	if not prev_mouse:match("a") then
 		vim.o.mouse = "a"
@@ -133,7 +142,7 @@ function M.UncoverWindowWithMouse()
 		{}
 	)
 
-	M.HideAllDetours()
+	features.HideAllDetours()
 	vim.g.detour_temp_uncover = 0
 	vim.cmd([[
         let c = getchar()
@@ -142,7 +151,7 @@ function M.UncoverWindowWithMouse()
         endif
     ]])
 
-	M.RevealAllDetours()
+	features.RevealAllDetours()
 
 	vim.o.mouse = prev_mouse
 	vim.cmd("echo '' | redraw!") -- clear the prompt
@@ -160,7 +169,7 @@ function M.UncoverWindowWithMouse()
 	)
 
 	if winid then
-		M.UncoverWindow(winid)
+		features.UncoverWindow(winid)
 	end
 end
 
@@ -170,7 +179,7 @@ end
 --- parent chain, and closes each detour from child to parent. When not inside
 --- a detour, this function is a no-op.
 ---@return nil
-function M.CloseCurrentStack()
+function features.CloseCurrentStack()
 	internal.garbage_collect()
 
 	local current_window = vim.api.nvim_get_current_win()
@@ -190,4 +199,4 @@ function M.CloseCurrentStack()
 	return true
 end
 
-return M
+return features

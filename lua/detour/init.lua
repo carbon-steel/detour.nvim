@@ -1,18 +1,14 @@
----@class detour.Public
----@field Detour fun(): integer|nil
----@field DetourCurrentWindow fun(): integer|nil
----@field setup fun(args?: detour.config.Options)
----@type detour.Public
-local M = {}
+---@mod detour
+---Core APIs to create and manage detour popups.
+---@tag detour
+
+---@class detour
+local detour = {}
 
 local util = require("detour.util")
 local internal = require("detour.internal")
 local algo = require("detour.windowing_algorithm")
 local settings = require("detour.config")
-
--- This plugin utilizes custom User events:
--- * User DetourPopupResized<id>: This event is triggered whenever a detour
--- popup is resized. The event pattern has the window's ID concatenated to it.
 
 ---Resize an existing popup and update covered windows' focusability.
 ---@param window_id integer
@@ -265,7 +261,7 @@ end
 
 ---Open a detour popup
 ---@return integer|nil popup_id
-M.Detour = function()
+detour.Detour = function()
 	internal.garbage_collect()
 	if util.is_floating(vim.api.nvim_get_current_win()) then
 		return popup_above_float()
@@ -276,7 +272,7 @@ end
 
 ---Open a detour popup covering only the current window.
 ---@return integer|nil popup_id
-M.DetourCurrentWindow = function()
+detour.DetourCurrentWindow = function()
 	internal.garbage_collect()
 
 	if util.is_floating(vim.api.nvim_get_current_win()) then
@@ -290,6 +286,6 @@ M.DetourCurrentWindow = function()
 end
 
 ---@type fun(args?: detour.config.Options)
-M.setup = require("detour.config").setup
+detour.setup = require("detour.config").setup
 
-return M
+return detour

@@ -1,4 +1,8 @@
-local M = {}
+---@mod detour.windowing_algorithm
+---Layout algorithm for computing popup positions.
+
+---@class detour.windowing_algorithm
+local algo = {}
 
 local util = require("detour.util")
 
@@ -6,7 +10,7 @@ local util = require("detour.util")
 ---@param coverable_windows integer[]
 ---@param tab_id integer
 ---@return table|nil
-function M.construct_window_opts(coverable_windows, tab_id)
+function algo.construct_window_opts(coverable_windows, tab_id)
 	local roots = {}
 	for _, window_id in ipairs(vim.api.nvim_tabpage_list_wins(tab_id)) do
 		if not util.is_floating(window_id) then
@@ -152,7 +156,7 @@ end
 ---@param parent integer
 ---@param layer integer?
 ---@return table
-function M.construct_nest(parent, layer)
+function algo.construct_nest(parent, layer)
 	assert(
 		util.is_open(parent),
 		"trying to construct a nested window in a window that doesn't exist: ",
@@ -181,4 +185,4 @@ function M.construct_nest(parent, layer)
 	}
 end
 
-return M
+return algo
