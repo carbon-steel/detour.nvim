@@ -182,10 +182,17 @@ end)
 * [X] Allow custom function for creating titles
     - After further thought, I've decided against this as the feature already
       depends on an experimental feature.
-* [ ] Write docs
+* [X] Write docs
 * [X] Implement "detour-aware" window switching
-* [ ] Implement better semantics around coverable windows
-* [ ] Add lua annotations to all functions
+* [X] Implement better semantics around coverable windows
+* [X] Add lua annotations to all functions
+
+# Documentation
+
+* Build help docs: run `make help` from the repo root.
+* Requirements:
+    - `lemmy-help` in your PATH ([repo](https://github.com/numToStr/lemmy-help/tree/master)).
+    - Optional: Neovim available for generating `helptags` (target does not fail if absent).
 
 # FAQ
 

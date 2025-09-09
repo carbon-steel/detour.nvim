@@ -21,7 +21,7 @@
 ---
 ---You will find that there are many cases where using a large floating window is
 ---preferable to creating a smaller split window. On top of that, the nesting
----behavior of detours allows you to take a "detour" into other files/locations
+---behavior of detours allows you to take a long "detour" into other files/locations
 ---without losing your place in your regular windows. Take a detour, look at
 ---other locations, close the detour, and find your original windows as they
 ---were when you left.
