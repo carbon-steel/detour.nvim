@@ -1,8 +1,32 @@
 ---@mod detour
----Core APIs to create and manage detour popups.
----@tag detour
+---@tag detour-into
+---@brief [[
+---Neovim/Vim's floating windows are a great utility to use in plugins and
+---functions, but they cannot be used manually as splits are. This is because
+---creating floats is not simple like calling `:split` or `:vsplit`.
+---`vim.api.nvim_open_win(...)` requires coordinates and dimensions to make
+---a float which is too tedious to do by hand.
+---
+---Detour.nvim brings a single new feature to Neovim: detour windows (aka
+---detours). Detours are floating windows with the ease-of-use of splits.
+---
+---They dynamically shape themselves to cover as much of a given area as possible.
+---They can cover:
+---* the whole screen (`require("detour").Detour()`)
+---* the current window (`require("detour").DetourCurrentWindow()`)
+---* the current detour (both of the above functions would work)
+---
+---Detours will make sure not to overlap each other unless when a detour is
+---nested within another.
+---
+---You will find that there are many cases where using a large floating window is
+---preferable to creating a smaller split window. On top of that, the nesting
+---behavior of detours allows you to take a "detour" into other files/locations
+---without losing your place in your regular windows. Take a detour, look at
+---other locations, close the detour, and find your original windows as they
+---were when you left.
+---@brief ]]
 
----@class detour
 local detour = {}
 
 local util = require("detour.util")
@@ -259,8 +283,26 @@ local function popup(bufnr, reserve_windows)
 	return popup_id
 end
 
----Open a detour popup
----@return integer|nil popup_id
+---Open a new detour window
+---
+---* If this is called from a non-detour window, the largest possible detour
+---window will be opened that does not overlap with any other detours.
+---* If this is called from a detour window, a detour will be opened nested
+---within just the current detour.
+---
+---There are cases where there is no space for a new detour window and
+---this function call will do nothing.
+---@return integer|nil popup_id returns detour's window id if successfully
+---created, nil otherwise
+---@nodiscard
+---@usage `
+--- local window_id = require("detour").Detour()
+--- if not window_id then
+---     -- New detour could not be made so stop execution
+---     return
+--- end
+---
+--- -- New detour window is open and cursor is moved to it.`
 detour.Detour = function()
 	internal.garbage_collect()
 	if util.is_floating(vim.api.nvim_get_current_win()) then
@@ -271,7 +313,20 @@ detour.Detour = function()
 end
 
 ---Open a detour popup covering only the current window.
----@return integer|nil popup_id
+---
+---There are cases where there is no space for a new detour window and
+---this function call will do nothing.
+---@return integer|nil popup_id returns detour's window id if successfully
+---created, nil otherwise
+---@nodiscard
+---@usage `
+--- local window_id = require("detour").DetourCurrentWindow()
+--- if not window_id then
+--- 	-- New detour could not be made so stop execution
+--- 	return
+--- end
+---
+--- -- New detour window is open and cursor is moved to it.`
 detour.DetourCurrentWindow = function()
 	internal.garbage_collect()
 
@@ -285,7 +340,6 @@ detour.DetourCurrentWindow = function()
 	)
 end
 
----@type fun(args?: detour.config.Options)
 detour.setup = require("detour.config").setup
 
 return detour

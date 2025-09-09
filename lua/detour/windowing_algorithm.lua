@@ -1,7 +1,6 @@
 ---@mod detour.windowing_algorithm
 ---Layout algorithm for computing popup positions.
 
----@class detour.windowing_algorithm
 local algo = {}
 
 local util = require("detour.util")
