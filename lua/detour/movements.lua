@@ -1,22 +1,19 @@
 ---@mod detour.movements
 ---@brief [[
---- The `detour.movements` module introduces backward-incompatible changes.
---- Users who `require` this module will enable autocmds that enhance their
---- window switching to be "detour-aware". Those who do not require this module
---- will keep the standard window switching behavior. Encapsulating this logic
---- in a module allows users to opt-in to the new behavior instead of having the
---- behavior change from under their feet.
+---Detour.nvim breaks window navigation commands such as
+---`<C-w>w`, `<C-w>j`, or `vim.cmd.wincmd("h")`. Instead of
+---using those, the user MUST use the following window navigation
+---commands that this plugin provides that implements moving
+---between windows while skipping over windows covered by detours.
+---
+---NOTE: Regular window movements such as `<C-w>w`, `<C-w>j`,
+---`vim.cmd.wincmd("h")` should still work in automated
+---scripts/functions. Still, you may find it more useful to use detour's
+---"detour-aware" movement functions in your scripts/functions as well.
 ---@brief ]]
 
----@tag detour.movements
+---@tag detour-movements
 
----@class detour.movements
----@field DetourWinCmdL fun()
----@field DetourWinCmdH fun()
----@field DetourWinCmdJ fun()
----@field DetourWinCmdK fun()
----@field DetourWinCmdW fun()
----@field _safe_state_handler fun(): nil
 local movements = {}
 
 local util = require("detour.util")
@@ -25,7 +22,7 @@ local internal = require("detour.internal")
 local module_augroup = "detour-movements"
 vim.api.nvim_create_augroup(module_augroup, { clear = true })
 
----FOR TESTING ONLY
+---DO NOT USE. FOR TESTING ONLY.
 movements._safe_state_handler = function()
 	internal.garbage_collect()
 	vim.fn.win_gotoid(util.find_top_popup())
@@ -41,13 +38,15 @@ vim.api.nvim_create_autocmd({ "SafeState" }, {
 	nested = true,
 })
 
---- Switch windows to the right in "detour-aware" fashion.
----
---- If moving away from a detour, move first to a base window and perform
---- `vim.cmd.wincmd('l').`
----
---- If arriving into a window covered by a detour, switch into that detour.
+--- Switch to a window to the right. Skip over any non-floating windows
+--- covered by a detour.
 ---@return nil
+---@usage `
+--- local detour_moves = require("detour.movements")
+--- vim.keymap.set({ "n", "t" }, "<C-l>", detour_moves.DetourWinCmdL)
+--- vim.keymap.set({ "n", "t" }, "<C-w>l", detour_moves.DetourWinCmdL)
+--- vim.keymap.set({ "n", "t" }, "<C-w><C-l>", detour_moves.DetourWinCmdL)
+---`
 function movements.DetourWinCmdL()
 	local covered_bases = util.find_covered_bases(
 		vim.api.nvim_get_current_win()
@@ -74,13 +73,15 @@ function movements.DetourWinCmdL()
 	vim.fn.win_gotoid(util.find_top_popup())
 end
 
---- Switch windows to the left in "detour-aware" fashion.
----
---- If moving away from a detour, move first to a base window and perform
---- `vim.cmd.wincmd('h').`
----
---- If arriving into a window covered by a detour, switch into that detour.
+--- Switch to a window to the left. Skip over any non-floating windows
+--- covered by a detour.
 ---@return nil
+---@usage `
+--- local detour_moves = require("detour.movements")
+--- vim.keymap.set({ "n", "t" }, "<C-h>", detour_moves.DetourWinCmdH)
+--- vim.keymap.set({ "n", "t" }, "<C-w>h", detour_moves.DetourWinCmdH)
+--- vim.keymap.set({ "n", "t" }, "<C-w><C-h>", detour_moves.DetourWinCmdH)
+---`
 function movements.DetourWinCmdH()
 	local covered_bases = util.find_covered_bases(
 		vim.api.nvim_get_current_win()
@@ -104,13 +105,15 @@ function movements.DetourWinCmdH()
 	vim.fn.win_gotoid(util.find_top_popup())
 end
 
---- Switch windows downwards in "detour-aware" fashion.
----
---- If moving away from a detour, move first to a base window and perform
---- `vim.cmd.wincmd('j').`
----
---- If arriving into a window covered by a detour, switch into that detour.
+--- Switch to a window below. Skip over any non-floating windows
+--- covered by a detour.
 ---@return nil
+---@usage `
+--- local detour_moves = require("detour.movements")
+--- vim.keymap.set({ "n", "t" }, "<C-j>", detour_moves.DetourWinCmdJ)
+--- vim.keymap.set({ "n", "t" }, "<C-w>j", detour_moves.DetourWinCmdJ)
+--- vim.keymap.set({ "n", "t" }, "<C-w><C-j>", detour_moves.DetourWinCmdJ)
+---`
 function movements.DetourWinCmdJ()
 	local covered_bases = util.find_covered_bases(
 		vim.api.nvim_get_current_win()
@@ -139,13 +142,15 @@ function movements.DetourWinCmdJ()
 	vim.fn.win_gotoid(util.find_top_popup())
 end
 
---- Switch windows upwards in "detour-aware" fashion.
----
---- If moving away from a detour, move first to a base window and perform
---- `vim.cmd.wincmd('k').`
----
---- If arriving into a window covered by a detour, switch into that detour.
+--- Switch to a window above. Skip over any non-floating windows
+--- covered by a detour.
 ---@return nil
+---@usage `
+--- local detour_moves = require("detour.movements")
+--- vim.keymap.set({ "n", "t" }, "<C-k>", detour_moves.DetourWinCmdK)
+--- vim.keymap.set({ "n", "t" }, "<C-w>k", detour_moves.DetourWinCmdK)
+--- vim.keymap.set({ "n", "t" }, "<C-w><C-k>", detour_moves.DetourWinCmdK)
+---`
 function movements.DetourWinCmdK()
 	local covered_bases = util.find_covered_bases(
 		vim.api.nvim_get_current_win()
@@ -169,12 +174,19 @@ function movements.DetourWinCmdK()
 	vim.fn.win_gotoid(util.find_top_popup())
 end
 
---- Switch windows in a cycle in "detour-aware" fashion.
----
---- Calls `vim.cmd.wincmd('w')` if arriving into a window covered by a detour,
---- switch into that detour.
+--- Switch windows in a cycle. Skip over any non-floating windows covered
+--- by a detour.
 ---@return nil
+---@usage `
+--- local detour_moves = require("detour.movements")
+--- vim.keymap.set({ "n", "t" }, "<C-w>", detour_moves.DetourWinCmdW)
+--- vim.keymap.set({ "n", "t" }, "<C-w>w", detour_moves.DetourWinCmdW)
+--- vim.keymap.set({ "n", "t" }, "<C-w><C-w>", detour_moves.DetourWinCmdW)
+---`
 function movements.DetourWinCmdW()
+	-- We do not just repeatedly do `vim.cmd.wincmd("w")` until we hit a detour
+	-- or uncovered window because doing so could form a cycle that does not
+	-- include all windows.
 	local windows = vim.api.nvim_tabpage_list_wins(0)
 	local current_top = util.find_top_popup()
 
