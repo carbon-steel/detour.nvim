@@ -28,7 +28,7 @@ describe("detour", function()
         tmapclear
         ]])
 		vim.api.nvim_clear_autocmds({}) -- delete any autocmds not in a group
-		for _, autocmd in ipairs(vim.api.nvim_get_autocmds({ pattern = "*" })) do
+		for _, autocmd in ipairs(vim.api.nvim_get_autocmds({})) do
 			if vim.startswith(autocmd.group_name, "detour-") then
 				vim.api.nvim_del_autocmd(autocmd.id)
 			end
@@ -109,19 +109,22 @@ describe("detour", function()
 	end)
 
 	it("react to a coverable window closing", function()
-		pending(
-			"WinResized doesn't seem to work when running nvim as a command."
-		)
 		vim.cmd.wincmd("v")
 		local coverable_window = vim.api.nvim_get_current_win()
 		local popup = assert(detour.Detour())
+		assert.True(util.overlap(popup, coverable_window))
 		vim.fn.win_gotoid(coverable_window)
 		vim.cmd.wincmd("s")
 		local uncoverable_win = vim.api.nvim_get_current_win()
-		vim.fn.win_gotoid(coverable_window)
-		vim.cmd.close()
+		vim.api.nvim_exec_autocmds(
+			"WinResized",
+			{ data = { windows = { coverable_window } } }
+		)
+		assert.False(util.overlap(popup, uncoverable_win))
+		vim.api.nvim_win_close(coverable_window, true)
 
 		assert.False(util.overlap(popup, uncoverable_win))
+		vim.api.nvim_win_close(uncoverable_win, true)
 	end)
 
 	it("create popup over current window", function()
@@ -235,10 +238,6 @@ describe("detour", function()
 	it(
 		"Handle cases when popups close without throwing a WinClosed event",
 		function()
-			pending(
-				"WinResized doesn't seem to work when running nvim as a command."
-			)
-			vim.cmd.vsplit()
 			local popup = assert(detour.DetourCurrentWindow())
 			vim.api.nvim_create_autocmd({ "WinLeave" }, {
 				callback = function()
@@ -246,9 +245,8 @@ describe("detour", function()
 					return true
 				end,
 			})
-			vim.cmd.wincmd("h")
+			vim.cmd.wincmd("h") -- Close popup without WinClosed event
 			assert.False(util.is_open(popup))
-			vim.cmd.wincmd("l")
 			assert(detour.DetourCurrentWindow())
 		end
 	)
