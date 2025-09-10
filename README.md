@@ -7,28 +7,30 @@ J.R.R. Tolkien, The Lord of the Rings
 </div>
 </br></br>
 
-![detour](https://github.com/carbon-steel/detour.nvim/assets/7697639/63a88fd3-f910-4e42-9664-0e14fe88d066)
+`detour.nvim` provides commands to open floating windows that position and shape
+themselves. It makes floating windows a viable alternative to split windows.
 
 # Never lose your spot!📍🗺️
 
 | What does detour.nvim do? | |
 | :--: | :--: |
-| `:Detour`/`require('detour').Detour()` <br />opens a popup window<br />over all current windows | ![detour](https://github.com/carbon-steel/detour.nvim/assets/7697639/1eb85155-7134-473f-8df0-dd15f55c1d8c) |
-| `:DetourCurrentWindow`/<br />`require('detour').DetourCurrentWindow()`<br />opens a popup window over<br />only the current window | ![detour2](https://github.com/carbon-steel/detour.nvim/assets/7697639/d3f0db15-916b-4b17-b227-0e4aa8fc318d) |
+| `:Detour`/`require('detour').Detour()` <br />opens a floating window<br />over all current windows | ![detour](https://github.com/carbon-steel/detour.nvim/assets/7697639/1eb85155-7134-473f-8df0-dd15f55c1d8c) |
+| `:DetourCurrentWindow`/<br />`require('detour').DetourCurrentWindow()`<br />opens a floating window over<br />only the current window | ![detour2](https://github.com/carbon-steel/detour.nvim/assets/7697639/d3f0db15-916b-4b17-b227-0e4aa8fc318d) |
 | Works with Neovim's `:split`/`:vsplit`/`<C-w>s`/`<C-w>v`/`<C-w>T` commands | ![split](https://github.com/carbon-steel/detour.nvim/assets/7697639/4ffa7f36-8b2a-4d91-a8bb-7012f7b82015) |
 | You can nest detour popups | ![nest](https://github.com/carbon-steel/detour.nvim/assets/7697639/5fc3cad6-9acf-482d-97cb-c75788617cf8) |
 | Example usage: Open a popup <br />-> Go to different file <br />-> Create vertical split <br />-> Close popup | ![basic](https://github.com/carbon-steel/detour.nvim/assets/7697639/3a408a14-8b9d-4bd4-90db-e633c5f97b7c) |
 
-`detour.nvim` has two uses:
+Neovim's floating windows are a great utility to use in plugins and
+functions, but they cannot be used manually. This is because
+creating floats is not simple like calling `:split` or `:vsplit`.
+`vim.api.nvim_open_win(...)` requires coordinates and dimensions to make
+a float which is too tedious to do by hand.
 
-* Use popup windows instead of split windows
-  
-  :+1: Popups preserve your position in the current file during detours into other files *(just like splits)*
+Detour.nvim brings a single new feature to Neovim: **detour windows** (aka
+detours). Detours are floating windows with the ease-of-use of splits.
 
-  :+1: Popups can use the entire screen *(unlike splits)*
-
-* Provide a large popup windows for TUIs, scripts, and commands.
-    - This plugin can be considered a generalized version of [`toggleterm.nvim`](https://github.com/akinsho/toggleterm.nvim) and [`lazygit.nvim`](https://github.com/kdheepak/lazygit.nvim).
+Detours will make sure not to overlap each other unless when a detour is
+nested within another.
 
 # Installation
 
@@ -42,6 +44,29 @@ J.R.R. Tolkien, The Lord of the Rings
         })
         vim.keymap.set('n', '<c-w><enter>', ":Detour<cr>")
         vim.keymap.set('n', '<c-w>.', ":DetourCurrentWindow<cr>")
+
+        local detour_moves = require("detour.movements")
+        -- This is an example set of keymaps, but if you use other keys to
+        -- navigate windows, changes these keymaps to suit your situation.
+        vim.keymap.set({ "n", "t" }, "<C-j>", detour_moves.DetourWinCmdJ)
+        vim.keymap.set({ "n", "t" }, "<C-w>j", detour_moves.DetourWinCmdJ)
+        vim.keymap.set({ "n", "t" }, "<C-w><C-j>", detour_moves.DetourWinCmdJ)
+
+        vim.keymap.set({ "n", "t" }, "<C-h>", detour_moves.DetourWinCmdH)
+        vim.keymap.set({ "n", "t" }, "<C-w>h", detour_moves.DetourWinCmdH)
+        vim.keymap.set({ "n", "t" }, "<C-w><C-h>", detour_moves.DetourWinCmdH)
+
+        vim.keymap.set({ "n", "t" }, "<C-k>", detour_moves.DetourWinCmdK)
+        vim.keymap.set({ "n", "t" }, "<C-w>k", detour_moves.DetourWinCmdK)
+        vim.keymap.set({ "n", "t" }, "<C-w><C-k>", detour_moves.DetourWinCmdK)
+
+        vim.keymap.set({ "n", "t" }, "<C-l>", detour_moves.DetourWinCmdL)
+        vim.keymap.set({ "n", "t" }, "<C-w>l", detour_moves.DetourWinCmdL)
+        vim.keymap.set({ "n", "t" }, "<C-w><C-l>", detour_moves.DetourWinCmdL)
+
+        vim.keymap.set({ "n", "t" }, "<C-w>w", detour_moves.DetourWinCmdW)
+        vim.keymap.set({ "n", "t" }, "<C-w><C-w>", detour_moves.DetourWinCmdW)
+
     end
 },
 ```
@@ -56,14 +81,14 @@ Here are a few basic examples...
 
 ### Use with Telescope
 
-Select a terminal buffer to open in a popup
+Select a terminal buffer to open in a detour
 
 This is a simple example but there is a better keymap in `examples/telescope.md` that also opens a new terminal when no terminals are found.
 
 ```lua
 vim.keymap.set("n", "<leader>t", function()
-	local popup_id = require("detour").Detour() -- Open a detour popup
-	if not popup_id then
+	local window_id = require("detour").Detour() -- Open a detour
+	if not window_id then
 		return
 	end
 
@@ -75,7 +100,7 @@ vim.keymap.set("n", "<leader>t", function()
 	-- with.
 	vim.cmd.enew()
 	vim.bo.bufhidden = "delete" -- delete this scratch buffer when we move out of it
-	vim.wo[popup_id].signcolumn = "no"
+	vim.wo[window_id].signcolumn = "no"
 
 	require("telescope.builtin").buffers({}) -- Open telescope prompt
 	vim.api.nvim_feedkeys("term://", "n", true) -- popuplate prompt with "term"
@@ -89,20 +114,20 @@ end)
 
 ### Wrap a TUI: top
 
-You can wrap any TUI in a popup. Here is an example.
+You can wrap any TUI in a detour. Here is an example.
 
-Run `top` in a popup:
+Run `top` in a detour:
 
 ```lua
 vim.keymap.set("n", "<leader>p", function()
-	local popup_id = require("detour").Detour() -- open a detour popup
-	if not popup_id then
+	local window_id = require("detour").Detour() -- open a detour
+	if not window_id then
 		return
 	end
 
 	vim.cmd.terminal("top") -- open a terminal buffer
 	vim.bo.bufhidden = "delete" -- close the terminal when window closes
-	vim.wo[popup_id].signcolumn = "no" -- In Neovim 0.10, the signcolumn can push the TUI a bit out of window
+	vim.wo[window_id].signcolumn = "no" -- In Neovim 0.10, the signcolumn can push the TUI a bit out of window
 
 	-- It's common for people to have `<Esc>` mapped to `<C-\><C-n>` for terminals.
 	-- This can get in the way when interacting with TUIs.
@@ -129,13 +154,13 @@ end)
 
 ### Wrap a TUI: tig
 
-Run `tig` in a popup:
+Run `tig` in a detour:
 
 ```lua
 vim.keymap.set("n", "<leader>g", function()
 	local current_dir = vim.fn.expand("%:p:h")
-	local popup_id = require("detour").Detour() -- open a detour popup
-	if not popup_id then
+	local window_id = require("detour").Detour() -- open a detour
+	if not window_id then
 		return
 	end
 
@@ -145,7 +170,7 @@ vim.keymap.set("n", "<leader>g", function()
 
 	vim.cmd.terminal("tig") -- open a terminal buffer running tig
 	vim.bo.bufhidden = "delete" -- close the terminal when window closes
-	vim.wo[popup_id].signcolumn = "no" -- In Neovim 0.10, the signcolumn can push the TUI a bit out of window
+	vim.wo[window_id].signcolumn = "no" -- In Neovim 0.10, the signcolumn can push the TUI a bit out of window
 
 	-- It's common for people to have `<Esc>` mapped to `<C-\><C-n>` for terminals.
 	-- This can get in the way when interacting with TUIs.
@@ -176,27 +201,17 @@ end)
 | --      | --                                                                                          | --            |
 | `title` | "path" sets the path of the current buffer as the title of the float. "none" sets no title. | "path"        |
 
-# Milestones to Version 2
-
-* [X] Implement automatic titles for detours
-* [X] Allow custom function for creating titles
-    - After further thought, I've decided against this as the feature already
-      depends on an experimental feature.
-* [X] Write docs
-* [X] Implement "detour-aware" window switching
-* [X] Implement better semantics around coverable windows
-* [X] Add lua annotations to all functions
-
-# Documentation
+# Development
 
 * Build help docs: run `make help` from the repo root.
-* Requirements:
-    - `lemmy-help` in your PATH ([repo](https://github.com/numToStr/lemmy-help/tree/master)).
+    - Requires `lemmy-help` in your PATH ([repo](https://github.com/numToStr/lemmy-help/tree/master)).
     - Optional: Neovim available for generating `helptags` (target does not fail if absent).
+* Run test: run `make test` from the repo root
+    - Requires `docker`
 
 # FAQ
 
-> I want to convert popups to splits or tabs.
+> I want to convert detours to splits or tabs.
 
 `<C-w>s` and `<C-w>v` can be used from within a popup to create splits. `<C-w>T` creates tabs.
 
@@ -204,13 +219,9 @@ end)
 
 If your LSP movements (ex: `go-to-definition`) are opening locations in other windows, make sure that `reuse_win` is set to `false`.
 
-> My popups don't look good.
+> My floating windows don't look good.
 
-Some colorschemes don't have visually clear floating window border colors. Consider customizing your colorscheme's FloatBorder to a color that makes your popups clearer.
-
-> I can't tell when my cursor is actually focused on the window behind the popup and not the popup itself.
-
-This is a pain point that I'm going to release a fix for very soon. Until then, consider using a colorscheme that visually distinguishes between focused windows and unfocused windows. Aside from the plugin, this is just a good thing to have. You can customize your current colorscheme yourself. You'd just need to override `NormalNC` to have a different background than `Normal`.
+Some colorschemes don't have visually clear floating window border colors. Consider customizing your colorscheme's FloatBorder to a color that makes your floating windows clearer.
 
 > My TUI is slightly wider than the floating window it's in.
 
