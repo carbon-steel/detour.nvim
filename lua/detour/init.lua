@@ -208,7 +208,7 @@ local function popup(bufnr, reserve_windows)
 
 	vim.api.nvim_create_autocmd({ "WinResized" }, {
 		group = augroup_id,
-		callback = function()
+		callback = function(event)
 			local reserved = internal.get_reserved_windows(popup_id)
 			if reserved == nil then
 				internal.teardown_detour(popup_id)
@@ -216,10 +216,12 @@ local function popup(bufnr, reserve_windows)
 			end
 			-- WinResized populates vim.v.event.windows but VimResized does not
 			-- so we default to listing all windows.
-			local changed_window = assert(
-				vim.v["event"]["windows"][1],
-				"no windows listed in WinResized event"
-			)
+			-- Use event.data.windows for tests.
+			local windows = vim.tbl_get(vim.v["event"], "windows") == nil
+					and event.data.windows
+				or vim.v["event"]["windows"]
+			local changed_window =
+				assert(windows[1], "no windows listed in WinResized event")
 			local changed_tab = vim.api.nvim_win_get_tabpage(changed_window)
 			if tab_id == changed_tab then
 				local new_window_opts =
