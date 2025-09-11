@@ -83,21 +83,30 @@ Here are a few basic examples...
 
 ```lua
 vim.keymap.set("n", "<leader>e", function()
-	require("detour").Detour()
-	vim.cmd.edit(vim.fn.stdpath("config"))
+    -- Open detour
+    if not require("detour").Detour() then
+		return
+	end
+	vim.cmd.edit(vim.fn.stdpath("config")) -- open Neovim config directory
 end)
 ```
+
+[Screencast from 2025-09-11 07-37-45.webm](https://github.com/user-attachments/assets/9842dde2-3c42-4ade-aa27-35d23b45b42c)
 
 ### Jump to definition in detour
 
 ```lua
 vim.keymap.set("n", "<leader>gd", function()
+    -- Open detour with the same buffer
 	if not require("detour").Detour() then
 		return
 	end
-	vim.lsp.buf.definition()
+	vim.lsp.buf.definition() -- jump to definition
 end)
 ```
+
+[Screencast from 2025-09-11 07-46-29.webm](https://github.com/user-attachments/assets/2be6d21c-623e-4312-bd42-1b6314f18323)
+
 
 ### Use with Telescope
 
