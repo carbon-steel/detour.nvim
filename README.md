@@ -79,6 +79,26 @@ nested within another.
 
 Here are a few basic examples...
 
+### Open your Neovim config
+
+```lua
+vim.keymap.set("n", "<leader>e", function()
+	require("detour").Detour()
+	vim.cmd.edit(vim.fn.stdpath("config"))
+end)
+```
+
+### Jump to definition in detour
+
+```lua
+vim.keymap.set("n", "<leader>gd", function()
+	if not require("detour").Detour() then
+		return
+	end
+	vim.lsp.buf.definition()
+end)
+```
+
 ### Use with Telescope
 
 Select a terminal buffer to open in a detour
