@@ -8,7 +8,7 @@ J.R.R. Tolkien, The Lord of the Rings
 </br></br>
 
 `detour.nvim` provides commands to open floating windows that position and shape
-themselves. It makes floating windows a viable alternative to split windows.
+themselves.
 
 # Never lose your spot!📍🗺️
 
@@ -32,45 +32,6 @@ detours). Detours are floating windows with the ease-of-use of splits.
 Detours will make sure not to overlap each other unless when a detour is
 nested within another.
 
-# Installation
-
-### Lazy.nvim
-
-```lua
-{ "carbon-steel/detour.nvim",
-    config = function ()
-        require("detour").setup({
-            -- Put custom configuration here
-        })
-        vim.keymap.set('n', '<c-w><enter>', ":Detour<cr>")
-        vim.keymap.set('n', '<c-w>.', ":DetourCurrentWindow<cr>")
-
-        local detour_moves = require("detour.movements")
-        -- This is an example set of keymaps, but if you use other keys to
-        -- navigate windows, changes these keymaps to suit your situation.
-        vim.keymap.set({ "n", "t" }, "<C-j>", detour_moves.DetourWinCmdJ)
-        vim.keymap.set({ "n", "t" }, "<C-w>j", detour_moves.DetourWinCmdJ)
-        vim.keymap.set({ "n", "t" }, "<C-w><C-j>", detour_moves.DetourWinCmdJ)
-
-        vim.keymap.set({ "n", "t" }, "<C-h>", detour_moves.DetourWinCmdH)
-        vim.keymap.set({ "n", "t" }, "<C-w>h", detour_moves.DetourWinCmdH)
-        vim.keymap.set({ "n", "t" }, "<C-w><C-h>", detour_moves.DetourWinCmdH)
-
-        vim.keymap.set({ "n", "t" }, "<C-k>", detour_moves.DetourWinCmdK)
-        vim.keymap.set({ "n", "t" }, "<C-w>k", detour_moves.DetourWinCmdK)
-        vim.keymap.set({ "n", "t" }, "<C-w><C-k>", detour_moves.DetourWinCmdK)
-
-        vim.keymap.set({ "n", "t" }, "<C-l>", detour_moves.DetourWinCmdL)
-        vim.keymap.set({ "n", "t" }, "<C-w>l", detour_moves.DetourWinCmdL)
-        vim.keymap.set({ "n", "t" }, "<C-w><C-l>", detour_moves.DetourWinCmdL)
-
-        vim.keymap.set({ "n", "t" }, "<C-w>w", detour_moves.DetourWinCmdW)
-        vim.keymap.set({ "n", "t" }, "<C-w><C-w>", detour_moves.DetourWinCmdW)
-
-    end
-},
-```
-
 # Example keymaps
 
 `detour.nvim` is designed as a utility library for keymaps people can write on their own.
@@ -83,8 +44,8 @@ Here are a few basic examples...
 
 ```lua
 vim.keymap.set("n", "<leader>e", function()
-    -- Open detour
-    if not require("detour").Detour() then
+	-- Open detour
+	if not require("detour").Detour() then
 		return
 	end
 	vim.cmd.edit(vim.fn.stdpath("config")) -- open Neovim config directory
@@ -97,7 +58,7 @@ end)
 
 ```lua
 vim.keymap.set("n", "<leader>gd", function()
-    -- Open detour with the same buffer
+	-- Open detour with the same buffer
 	if not require("detour").Detour() then
 		return
 	end
@@ -222,6 +183,45 @@ end)
 |:--:|
 | **Use keymap above -> Close window** |
 | ![tig2](https://github.com/carbon-steel/detour.nvim/assets/7697639/7dd84b42-26d8-487b-8486-aa08e0fef5c8) |
+
+# Installation
+
+### Lazy.nvim
+
+```lua
+{ "carbon-steel/detour.nvim",
+    config = function ()
+        require("detour").setup({
+            -- Put custom configuration here
+        })
+        vim.keymap.set('n', '<c-w><enter>', ":Detour<cr>")
+        vim.keymap.set('n', '<c-w>.', ":DetourCurrentWindow<cr>")
+
+        local detour_moves = require("detour.movements")
+        -- This is an example set of keymaps, but if you use other keys to
+        -- navigate windows, changes these keymaps to suit your situation.
+        vim.keymap.set({ "n", "t" }, "<C-j>", detour_moves.DetourWinCmdJ)
+        vim.keymap.set({ "n", "t" }, "<C-w>j", detour_moves.DetourWinCmdJ)
+        vim.keymap.set({ "n", "t" }, "<C-w><C-j>", detour_moves.DetourWinCmdJ)
+
+        vim.keymap.set({ "n", "t" }, "<C-h>", detour_moves.DetourWinCmdH)
+        vim.keymap.set({ "n", "t" }, "<C-w>h", detour_moves.DetourWinCmdH)
+        vim.keymap.set({ "n", "t" }, "<C-w><C-h>", detour_moves.DetourWinCmdH)
+
+        vim.keymap.set({ "n", "t" }, "<C-k>", detour_moves.DetourWinCmdK)
+        vim.keymap.set({ "n", "t" }, "<C-w>k", detour_moves.DetourWinCmdK)
+        vim.keymap.set({ "n", "t" }, "<C-w><C-k>", detour_moves.DetourWinCmdK)
+
+        vim.keymap.set({ "n", "t" }, "<C-l>", detour_moves.DetourWinCmdL)
+        vim.keymap.set({ "n", "t" }, "<C-w>l", detour_moves.DetourWinCmdL)
+        vim.keymap.set({ "n", "t" }, "<C-w><C-l>", detour_moves.DetourWinCmdL)
+
+        vim.keymap.set({ "n", "t" }, "<C-w>w", detour_moves.DetourWinCmdW)
+        vim.keymap.set({ "n", "t" }, "<C-w><C-w>", detour_moves.DetourWinCmdW)
+
+    end
+},
+```
 
 # Options
 
