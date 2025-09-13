@@ -32,6 +32,17 @@ detours). Detours are floating windows with the ease-of-use of splits.
 Detours will make sure not to overlap each other unless when a detour is
 nested within another.
 
+Using detours can be simple, but they also come with features for power users:
+
+* `require("detour.features").UncoverWindow`: Update all detours to uncover a
+  given regular window
+* `require("detour.features").UncoverWindowWithMouse`: Same as above but select
+  which window to uncover with the mouse
+* `require("detour.features").HideAllDetours`/`RevealAllDetours`: Hide and
+  reveal all detours so you can see the windows behind them
+* `require("detour.features").CloseCurrentStack`: Closes the current detour
+  along with all detours it is nested within
+
 # Example keymaps
 
 `detour.nvim` is designed as a utility library for keymaps people can write on their own.
