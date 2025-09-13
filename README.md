@@ -105,8 +105,7 @@ vim.keymap.set("n", "<leader>gd", function()
 end)
 ```
 
-[Screencast from 2025-09-11 07-46-29.webm](https://github.com/user-attachments/assets/2be6d21c-623e-4312-bd42-1b6314f18323)
-
+[Screencast from 2025-09-13 18-57-09.webm](https://github.com/user-attachments/assets/5f71ace1-1392-4082-8daa-83be88669324)
 
 ### Use with Telescope
 
