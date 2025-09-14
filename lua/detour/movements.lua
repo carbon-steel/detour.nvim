@@ -188,6 +188,7 @@ function movements.DetourWinCmdW()
 	-- or uncovered window because doing so could form a cycle that does not
 	-- include all windows.
 	local windows = vim.api.nvim_tabpage_list_wins(0)
+	-- TODO: if there are no (visible) detours, just call vim.cmd.wincmd("w").
 	local current_top = util.find_top_popup()
 
 	-- Collect all the top detour or naked base windows.
