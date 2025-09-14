@@ -121,6 +121,16 @@ end)
         vim.keymap.set('n', '<c-w>.', ":DetourCurrentWindow<cr>")
 
         local detour_moves = require("detour.movements")
+        -- NOTE: While using `detour_moves` is not required to use this
+        -- plugin, it is strongly recommended as it makes window navigation
+        -- much more intuitive.
+        --
+        -- The following keymaps are drop in replacements for Vim's regular
+        -- window navigation commands. These replacements allows you to
+        -- skip over windows covered by detours (which is a much more
+        -- intuitive motion) but are otherwise the same as normal window
+        -- navigation.
+        --
         -- This is an example set of keymaps, but if you use other keys to
         -- navigate windows, changes these keymaps to suit your situation.
         vim.keymap.set({ "n", "t" }, "<C-j>", detour_moves.DetourWinCmdJ)
