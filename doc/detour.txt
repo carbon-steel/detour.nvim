@@ -22,7 +22,7 @@ nested within another.
 
 You will find that there are many cases where using a large floating window is
 preferable to creating a smaller split window. On top of that, the nesting
-behavior of detours allows you to take a "detour" into other files/locations
+behavior of detours allows you to take a long "detour" into other files/locations
 without losing your place in your regular windows. Take a detour, look at
 other locations, close the detour, and find your original windows as they
 were when you left.
@@ -79,6 +79,35 @@ detour.DetourCurrentWindow()                        *detour.DetourCurrentWindow*
         --- -- New detour window is open and cursor is moved to it.
 <
 
+
+==============================================================================
+                                                              *detour.algorithm*
+
+                                                              *detour-algorithm*
+Detour's windowing algorithm computes the largest rectangle where a
+floating window (detour) can be placed without overlapping windows that must
+remain visible.
+
+Overview
+
+ Each detour has a list of "reserved" windows that it is allowed to cover.
+
+ When creating or resizing a detour, the algorithm will find the largest
+ rectangular area where a floating window can go that covers only reserved
+ windows. That rectangle will be the position and dimensions of the detour.
+
+ `Detour()` creates a detour `d` where all windows that are not currently
+ reserved by an existing detour are reserved by `d`.
+
+ `DetourCurrentWindow()` creates a detour `d` where only the current window
+ is reserved by `d`.
+
+Resizing
+
+ Whenever windows open, close, or get resized, detours will recalculate the
+ largest area they can fill and dynamically reshape themselves. This allows
+ them to make room for new windows or to expand to take space that has been
+ freed up.
 
 ==============================================================================
                                                               *detour.movements*
