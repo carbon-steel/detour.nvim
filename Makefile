@@ -20,7 +20,7 @@ HELP_EXCLUDE := lua/detour/internal.lua \
                 lua/detour/show_path_in_title.lua
 HELP_LUA_SRCS := $(filter-out $(HELP_EXCLUDE),$(HELP_LUA_ALL))
 # Ensure both init.lua and features.lua are first in order
-HELP_LUA_HEAD := lua/detour/init.lua lua/detour/movements.lua
+HELP_LUA_HEAD := lua/detour/init.lua lua/detour/algorithm_doc.lua lua/detour/movements.lua
 HELP_LUA_TAIL := $(filter-out $(HELP_LUA_HEAD),$(HELP_LUA_SRCS))
 help:
 	# Generate help docs via lemmy-help from Lua sources (with excludes)

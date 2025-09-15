@@ -1,9 +1,11 @@
 detour	detour.txt	/*detour*
+detour-algorithm	detour.txt	/*detour-algorithm*
 detour-features	detour.txt	/*detour-features*
 detour-into	detour.txt	/*detour-into*
 detour-movements	detour.txt	/*detour-movements*
 detour.Detour	detour.txt	/*detour.Detour*
 detour.DetourCurrentWindow	detour.txt	/*detour.DetourCurrentWindow*
+detour.algorithm	detour.txt	/*detour.algorithm*
 detour.features	detour.txt	/*detour.features*
 detour.movements	detour.txt	/*detour.movements*
 features.CloseCurrentStack	detour.txt	/*features.CloseCurrentStack*
