@@ -18,7 +18,7 @@ local internal = {}
 ---@field unreserve_window fun(window: integer): boolean
 
 ---@type table<integer, integer[]>
-local popup_to_reserved_windows = {}
+internal.popup_to_reserved_windows = {}
 
 ---@param window_id integer
 ---@return string
@@ -48,26 +48,29 @@ function internal.teardown_detour(window_id)
 			)
 		end
 	end
-	popup_to_reserved_windows[window_id] = nil
+	internal.popup_to_reserved_windows[window_id] = nil
 end
 
 function internal.is_detour(window)
-	return popup_to_reserved_windows[window] ~= nil
+	return internal.popup_to_reserved_windows[window] ~= nil
 end
 
 ---@param popup_id integer
 ---@return integer[]|nil
 function internal.get_reserved_windows(popup_id)
-	if popup_to_reserved_windows[popup_id] == nil then
+	if internal.popup_to_reserved_windows[popup_id] == nil then
 		return nil
 	end
 
 	-- Clean up any windows that have already been closed
-	popup_to_reserved_windows[popup_id] = vim.tbl_filter(function(window_id)
-		return vim.tbl_contains(vim.api.nvim_list_wins(), window_id)
-	end, popup_to_reserved_windows[popup_id])
+	internal.popup_to_reserved_windows[popup_id] = vim.tbl_filter(
+		function(window_id)
+			return vim.tbl_contains(vim.api.nvim_list_wins(), window_id)
+		end,
+		internal.popup_to_reserved_windows[popup_id]
+	)
 
-	return popup_to_reserved_windows[popup_id]
+	return internal.popup_to_reserved_windows[popup_id]
 end
 
 ---@param popup_id integer
@@ -87,19 +90,19 @@ function internal.record_popup(popup_id, coverable_windows)
 		}, true, { err = true })
 		return false
 	end
-	popup_to_reserved_windows[popup_id] = coverable_windows
+	internal.popup_to_reserved_windows[popup_id] = coverable_windows
 	return true
 end
 
 ---@return integer[]
 function internal.list_popups()
-	return vim.tbl_keys(popup_to_reserved_windows)
+	return vim.tbl_keys(internal.popup_to_reserved_windows)
 end
 
 ---@return integer[]
 function internal.list_reserved_windows()
 	local windows = vim.api.nvim_list_wins()
-	return vim.iter(vim.tbl_values(popup_to_reserved_windows))
+	return vim.iter(vim.tbl_values(internal.popup_to_reserved_windows))
 		:flatten()
 		:filter(function(w)
 			return vim.tbl_contains(windows, w) -- make sure window is still open
@@ -110,30 +113,22 @@ end
 ---@param window integer
 ---@return boolean
 function internal.unreserve_window(window)
+	window = assert(tonumber(window))
 	internal.garbage_collect()
-	local changed = false
-	local copy = vim.tbl_extend("force", popup_to_reserved_windows, {})
-	for popup, reserved_windows in pairs(popup_to_reserved_windows) do
+	local copy = vim.tbl_extend("force", internal.popup_to_reserved_windows, {})
+	for popup, reserved_windows in pairs(internal.popup_to_reserved_windows) do
 		copy[popup] = vim.iter(reserved_windows)
 			:filter(function(reserved)
-				if reserved ~= window then
-					return true
-				end
-				changed = true
-				return false
+				return tonumber(reserved) ~= tonumber(window)
 			end)
 			:totable()
 		if #copy[popup] == 0 then
-			vim.api.nvim_echo({
-				{
-					"[detour.nvim] A detour must have at least one window to float over. Detour id: "
-						.. popup,
-				},
-			}, true, { err = true })
+			-- A detour must have at least one window to float over,
 			return false
 		end
 	end
-	popup_to_reserved_windows = copy
+	local changed = not vim.deep_equal(internal.popup_to_reserved_windows, copy)
+	internal.popup_to_reserved_windows = copy
 	return changed
 end
 
@@ -188,6 +183,57 @@ vim.api.nvim_create_autocmd({ "CursorMoved", "ModeChanged" }, {
 
 		if internal.unreserve_window(vim.api.nvim_get_current_win()) then
 			vim.api.nvim_exec_autocmds("VimResized", {})
+		end
+	end,
+})
+
+-- Do not unreserve windows when WinScrolled is triggered by a WinResized.
+vim.api.nvim_create_autocmd({ "WinResized" }, {
+	group = group,
+	callback = function(ev)
+		for _, win in
+			ipairs(
+				vim.tbl_deep_extend(
+					"force",
+					vim.v.event.windows or {},
+					ev.data.windows
+				)
+			)
+		do
+			vim.w[tonumber(win)].detour_just_resized_window = true
+		end
+	end,
+})
+
+-- Unreserves windows that got a new buffer or scrolled on the same buffer.
+vim.api.nvim_create_autocmd({ "WinScrolled" }, {
+	group = group,
+	callback = function(ev)
+		local unreserved = false
+		for win in pairs(vim.tbl_deep_extend("force", vim.v.event, ev.data)) do
+			win = tonumber(win)
+			if win ~= nil then -- skip over "any" key
+				if
+					not vim.w[tonumber(win)]
+					or not vim.w[win].detour_just_resized_window
+				then
+					unreserved = internal.unreserve_window(win) or unreserved
+				end
+			end
+		end
+
+		if unreserved then
+			vim.api.nvim_exec_autocmds("VimResized", {})
+		end
+	end,
+})
+
+vim.api.nvim_create_autocmd({ "SafeState" }, {
+	group = group,
+	callback = function()
+		just_entered_window = false
+		for _, win in ipairs(vim.api.nvim_list_wins()) do
+			vim.w[win].detour_just_resized_window = false
 		end
 	end,
 })

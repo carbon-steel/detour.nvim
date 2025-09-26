@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.1.0
+
+### Changed
+
+* Uncover windows that scroll or change buffers covered by detours
+
 ## v2.0.0
 
 ### Added
